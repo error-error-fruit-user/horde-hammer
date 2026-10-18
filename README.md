@@ -105,6 +105,7 @@ Everything a player sees or hears can be replaced without touching the library:
 - **Sprites**: the placeholders are drawn by `tools/placeholders.py` (sprite names starting with `HH`, in `hh/sprites/hh/` and `hh/graphics/hh/`). A game ships files with the same names, or uses its own sprites in its subclasses.
 - **Sounds**: every sound is a name starting with `hh/` (`hh/purchase`, `hh/round_start`...) in `hh/SNDINFO.txt`, pointing at Doom's own until a game's SNDINFO defines the same name.
 - **Text**: every string is a `HH_` id in `hh/LANGUAGE.txt`; a game's LANGUAGE redefines any of them.
+- **Perks**: subclass a machine for its sprite and `HH_PerkMachine.Drink` (Quick Revive also has `HH_QuickReviveMachine.SoloDrink`), and the drink for its animation: a `Sprites` state naming three sprites plays them as frames A-Z, A-Z (the perk after I) and A-B, or replace `Ready` entirely. Perk and power-up icons are pictures named `HHI??` in `graphics/hh/`; a game ships its own under the same names.
 - **Drops**: subclass one (`MyMap_Instakill : HH_Instakill` with its own Spawn states) and the subclass drops instead of the original.
 - **Zombies**: `HH_Zombie` walks with the IWAD's former human sprites; subclass it with your own states and set `hh_zombie_class`. A random zombie set subclasses `HH_ZombieSpawner` (like `HH_VariedZombie`, Doom's monsters).
 
