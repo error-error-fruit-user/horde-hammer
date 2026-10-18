@@ -1,0 +1,11 @@
+// Horde Hammer's keys. They send network events instead of using buttons (+user1 and friends), so
+// they never clash with a mod that already uses those (Brutal Doom, Project Brutality).
+
+alias hh_kick "netevent hh_kick"
+alias hh_repulse "netevent hh_repulse"
+
+addkeysection "Horde Hammer" hh_keys
+addmenukey "Kick" hh_kick
+addmenukey "Repulse (hold off the next round)" hh_repulse
+defaultbind f hh_kick
+defaultbind q hh_repulse

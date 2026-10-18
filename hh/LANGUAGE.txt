@@ -1,0 +1,60 @@
+// Everything Horde Hammer shows a player. A game changes any of them by defining the same id in its
+// own LANGUAGE lump.
+
+[enu default]
+
+// Hints, shown when touching something
+HH_HINT_COST = "[Cost: %d]";
+HH_HINT_PICKUP = "[Pick up %s]";
+HH_HINT_REVIVE = "[Hold Use to revive]";
+
+// Obituaries
+HH_OB_ZOMBIE = "%o was eaten.";
+
+// Messages
+HH_MSG_DOWNED = "%s went down!";
+HH_MSG_REVIVED = "%s was revived!";
+HH_MSG_BLED_OUT = "%s bled out!";
+HH_MSG_JOINS_NEXT_ROUND = "%s joins next round";
+HH_MSG_POWERUP_1 = "Insta-Kill!";
+HH_MSG_POWERUP_2 = "Double Points!";
+HH_MSG_POWERUP_3 = "Max Ammo!";
+HH_MSG_POWERUP_4 = "Ka-Boom!";
+HH_MSG_POWERUP_5 = "Fire Sale!";
+
+// The HUD
+HH_HUD_GAME_OVER = "Game Over";
+HH_HUD_SURVIVED = "You survived %d rounds";
+HH_HUD_SURVIVED_ONE = "You survived 1 round";
+HH_HUD_SPECTATING = "Spectating";
+HH_HUD_SPECTATING_WHO = "Spectating %s";
+
+// Tags
+HH_TAG_QUICK_REVIVE = "Quick Revive";
+HH_TAG_JUGGERNOG = "Juggernog";
+HH_TAG_SPEED_COLA = "Speed Cola";
+HH_TAG_DOUBLE_TAP = "Double Tap";
+
+// Menus
+HH_MENU_OPTIONS = "Horde Hammer Options";
+HH_MENU_HUD = "HUD Layout";
+HH_MENU_TOGGLED_ZOOM = "Toggled zoom";
+HH_MENU_HUD_SCALE = "HUD scale";
+HH_MENU_HUD_ALPHA = "HUD opacity";
+HH_MENU_SHOW = "Show";
+HH_MENU_X = "Across";
+HH_MENU_Y = "Down";
+HH_MENU_SIZE = "Size";
+HH_MENU_POINTS = "Points";
+HH_MENU_ROUND = "Round";
+HH_MENU_AMMO = "Ammo";
+HH_MENU_PERKS = "Perks";
+HH_MENU_POWERUPS = "Power-ups";
+HH_MENU_HINT = "Hints";
+HH_MENU_REVIVE = "Revive bar";
+HH_MENU_MESSAGES = "Messages";
+HH_MENU_AMMO_NEVER = "Never";
+HH_MENU_AMMO_HH = "Horde Hammer weapons";
+HH_MENU_AMMO_ALL = "Every weapon";
+HH_MENU_RESET_HUD = "Reset HUD layout";
+HH_MENU_RESET_HUD_SURE = "Put every HUD part back where it started?";

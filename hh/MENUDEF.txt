@@ -1,0 +1,74 @@
+// Horde Hammer's options: a submenu at the end of the options menu
+
+AddOptionMenu "OptionsMenu" {
+    Submenu "$HH_MENU_OPTIONS", "HH_Options"
+}
+
+OptionValue "HH_AmmoShow" {
+    0, "$HH_MENU_AMMO_NEVER"
+    1, "$HH_MENU_AMMO_HH"
+    2, "$HH_MENU_AMMO_ALL"
+}
+
+OptionMenu "HH_Options" {
+    Title "$HH_MENU_OPTIONS"
+    Option "$HH_MENU_TOGGLED_ZOOM", "hh_toggled_zoom", "OnOff"
+    StaticText ""
+    Submenu "$HH_MENU_HUD", "HH_HudOptions"
+}
+
+OptionMenu "HH_HudOptions" {
+    Title "$HH_MENU_HUD"
+    Slider "$HH_MENU_HUD_SCALE", "hh_hud_scale", 0.25, 4.0, 0.05, 2
+    Slider "$HH_MENU_HUD_ALPHA", "hh_hud_alpha", 0.1, 1.0, 0.05, 2
+    StaticText ""
+    StaticText "$HH_MENU_POINTS", 1
+    Option "$HH_MENU_SHOW", "hh_hud_points_show", "OnOff"
+    Slider "$HH_MENU_X", "hh_hud_points_x", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_Y", "hh_hud_points_y", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_SIZE", "hh_hud_points_scale", 0.25, 4.0, 0.05, 2
+    StaticText ""
+    StaticText "$HH_MENU_ROUND", 1
+    Option "$HH_MENU_SHOW", "hh_hud_round_show", "OnOff"
+    Slider "$HH_MENU_X", "hh_hud_round_x", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_Y", "hh_hud_round_y", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_SIZE", "hh_hud_round_scale", 0.25, 4.0, 0.05, 2
+    StaticText ""
+    StaticText "$HH_MENU_AMMO", 1
+    Option "$HH_MENU_SHOW", "hh_hud_ammo_show", "HH_AmmoShow"
+    Slider "$HH_MENU_X", "hh_hud_ammo_x", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_Y", "hh_hud_ammo_y", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_SIZE", "hh_hud_ammo_scale", 0.25, 4.0, 0.05, 2
+    StaticText ""
+    StaticText "$HH_MENU_PERKS", 1
+    Option "$HH_MENU_SHOW", "hh_hud_perks_show", "OnOff"
+    Slider "$HH_MENU_X", "hh_hud_perks_x", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_Y", "hh_hud_perks_y", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_SIZE", "hh_hud_perks_scale", 0.25, 4.0, 0.05, 2
+    StaticText ""
+    StaticText "$HH_MENU_POWERUPS", 1
+    Option "$HH_MENU_SHOW", "hh_hud_powerups_show", "OnOff"
+    Slider "$HH_MENU_X", "hh_hud_powerups_x", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_Y", "hh_hud_powerups_y", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_SIZE", "hh_hud_powerups_scale", 0.25, 4.0, 0.05, 2
+    StaticText ""
+    StaticText "$HH_MENU_HINT", 1
+    Option "$HH_MENU_SHOW", "hh_hud_hint_show", "OnOff"
+    Slider "$HH_MENU_X", "hh_hud_hint_x", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_Y", "hh_hud_hint_y", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_SIZE", "hh_hud_hint_scale", 0.25, 4.0, 0.05, 2
+    StaticText ""
+    StaticText "$HH_MENU_REVIVE", 1
+    Option "$HH_MENU_SHOW", "hh_hud_revive_show", "OnOff"
+    Slider "$HH_MENU_X", "hh_hud_revive_x", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_Y", "hh_hud_revive_y", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_SIZE", "hh_hud_revive_scale", 0.25, 4.0, 0.05, 2
+    StaticText ""
+    StaticText "$HH_MENU_MESSAGES", 1
+    Option "$HH_MENU_SHOW", "hh_hud_messages_show", "OnOff"
+    Slider "$HH_MENU_X", "hh_hud_messages_x", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_Y", "hh_hud_messages_y", 0.0, 1.0, 0.01, 2
+    Slider "$HH_MENU_SIZE", "hh_hud_messages_scale", 0.25, 4.0, 0.05, 2
+    StaticText ""
+    SafeCommand "$HH_MENU_RESET_HUD", "event hh_reset_hud", "$HH_MENU_RESET_HUD_SURE"
+}

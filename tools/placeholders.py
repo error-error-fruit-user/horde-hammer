@@ -123,7 +123,15 @@ def main():
     opened = box(80, 40, (90, 60, 30, 255), "BOX", scale=3)
     opened.rect(4, 0, 72, 8, (255, 230, 120, 255))
     thing("sprites/hh/box/hhbxb0.png", opened)
-    thing("sprites/hh/box/hhtba0.png", box(24, 32, (150, 110, 60, 255), "BYE", scale=1))
+    # The lock the box shows before it moves: a padlock, shackle on top
+    lock = Picture(24, 32)
+    steel, gold = (170, 170, 180, 255), (220, 180, 40, 255)
+    lock.frame(5, 0, 14, 16, steel, 3)
+    lock.rect(0, 13, 24, 19, gold)
+    lock.frame(0, 13, 24, 19, BLACK, 2)
+    lock.rect(10, 18, 4, 5, BLACK)
+    lock.rect(11, 22, 2, 5, BLACK)
+    thing("sprites/hh/box/hhlka0.png", lock)
     thing("sprites/hh/pickup/hhnla0.png", box(20, 20, (60, 60, 60, 255), "?", scale=2))
     for name, color, label in [("hhqr", (40, 90, 220, 255), "QR"), ("hhjg", (200, 30, 30, 255), "JG"),
                                ("hhsc", (30, 160, 60, 255), "SC"), ("hhdt", (230, 150, 20, 255), "DT")]:

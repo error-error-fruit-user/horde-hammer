@@ -1,0 +1,27 @@
+// Horde Hammer's sounds, as aliases of Doom's own so a game is never silent. A game gives any of
+// them its own sound by defining the same name in its SNDINFO (which loads after this one).
+
+$alias hh/purchase          misc/i_pkup
+hh/denied                   dsnoway
+$alias hh/game_start        misc/teleport
+$alias hh/round_start       misc/teleport
+$alias hh/round_end         misc/spawn
+$alias hh/game_over         misc/secret
+$alias hh/box_open          misc/w_pkup
+$alias hh/box_move          misc/teleport
+$alias hh/drink             misc/i_pkup
+$alias hh/swallow           misc/i_pkup
+$alias hh/bottle_break      world/barrelx
+hh/kick                     dspunch
+$alias hh/powerup_grab      misc/p_pkup
+$alias hh/powerup_end       misc/spawn
+$alias hh/instakill         misc/p_pkup
+$alias hh/double_points     misc/p_pkup
+$alias hh/max_ammo          misc/w_pkup
+$alias hh/kaboom            world/barrelx
+$alias hh/fire_sale         misc/p_pkup
+$alias hh/zombie_attack     demon/melee
+$alias hh/zombie_pain       grunt/pain
+$alias hh/zombie_death      grunt/death
+$alias hh/zombie_active     grunt/active
+$alias hh/zombie_sight      grunt/sight

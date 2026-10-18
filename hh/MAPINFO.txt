@@ -1,0 +1,22 @@
+// Horde Hammer only adds its event handlers and its map things' editor numbers (27000-27099).
+// The player classes, status bar, skills and maps are the game's.
+
+GameInfo {
+    AddEventHandlers =
+        "HH_SettingsHandler", "HH_Events", "HH_Rounds", "HH_Spawning", "HH_Players", "HH_Input",
+        "HH_PointsHandler", "HH_DropPool", "HH_MysteryBoxHandler", "HH_HudHandler"
+}
+
+DoomEdNums {
+    27000 = "HH_Spawner"
+    27001 = "HH_MysteryBoxLocation"
+    27002 = "HH_Door"
+    27003 = "HH_Debris"
+    27004 = "HH_QuickReviveMachine"
+    27005 = "HH_JuggernogMachine"
+    27006 = "HH_SpeedColaMachine"
+    27007 = "HH_DoubleTapMachine"
+    27008 = "HH_SpectatorSpot"
+    27009 = "HH_GameOverCamera"
+    27010 = "HH_Zombie"
+}
