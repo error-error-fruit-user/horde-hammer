@@ -70,6 +70,13 @@ class HH_Powerup : Powerup {
         self.EffectTics = HH_Settings.Int("hh_powerup_duration");
     }
 
+    // Horde Hammer's HUD shows power-ups itself; the status bar's own icons would sit on the round
+    override TextureID GetPowerupIcon() {
+        TextureID none;
+        none.SetInvalid();
+        return none;
+    }
+
     override void EndEffect() {
         if (self.owner != null) {
             self.owner.A_StartSound("hh/powerup_end", CHAN_AUTO, CHANF_LOCAL);
