@@ -1,0 +1,6 @@
+/secrets
+/published
+__pycache__/
+*.dbs
+*.wad.backup*
+*.wad.autosave*
