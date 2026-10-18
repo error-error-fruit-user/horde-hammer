@@ -1,0 +1,10 @@
+// The test map, run by secrets/run.sh -m HHTEST with test/ loaded after the library
+
+map HHTEST "Horde Hammer Test" {
+    sky1 = "SKY1"
+    music = ""
+}
+
+GameInfo {
+    AddEventHandlers = "HHTest_Handler"
+}

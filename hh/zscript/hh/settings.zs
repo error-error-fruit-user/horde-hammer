@@ -94,11 +94,20 @@ class HH_SettingsHandler : EventHandler {
         class<HH_Defaults> chosen = 'HH_Defaults';
         foreach (type : AllClasses) {
             let defaults = (class<HH_Defaults>)(type);
-            if (defaults != null && defaults is chosen) {
+            if (defaults != null && HH_SettingsHandler.Derives(defaults, chosen)) {
                 chosen = defaults;
             }
         }
         HH_Defaults(new(chosen)).Fill(self);
+    }
+
+    static bool Derives(class<Object> type, class<Object> ancestor) {
+        for (let parent = type; parent != null; parent = parent.GetParentClass()) {
+            if (parent == ancestor) {
+                return true;
+            }
+        }
+        return false;
     }
 
     void Set(String key, String value) {
