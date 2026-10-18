@@ -89,9 +89,9 @@ class HH_DrinkAmmo : Ammo {
 }
 
 // The bottle in hand. Its Ready states play the drinking; Consume gives the perk partway through.
-// A game draws its own drinking by replacing Ready; nacht's way, a long animation over three
-// sprites, is supported by a "Sprites" state listing them and LoadSprites(0..2) switching between
-// them with #### frames.
+// A game gives a drink its own animation by listing three sprites in a "Sprites" state (frames A-Z
+// of the first, then the second's A-Z with the perk given after I, then the third's A-B: nacht's
+// World at War drinks), or by replacing Ready altogether. Without either, the placeholder bottle.
 class HH_Drink : HH_Weapon {
     meta class<HH_Perk> perk;
     int sprites[3];
@@ -184,10 +184,22 @@ class HH_Drink : HH_Weapon {
         TNT1 A 0 Discard;
         Stop;
     Ready:
+        TNT1 A 0 A_JumpIf(invoker.sprites[0] != 0, "SpriteReady");
         HHDK A 0 A_StartSound("hh/drink", CHAN_AUTO);
         HHDK ABCD 8 DrinkReady;
         HHDK D 0 Consume;
         HHDK DDCBA 8 DrinkReady;
+        TNT1 A 0 A_StartSound("hh/bottle_break", CHAN_AUTO);
+        Goto Deselect;
+    SpriteReady:
+        TNT1 A 0 LoadSprites(0);
+        #### ABCDEFGHIJKLMNOPQRSTUVWXYZ 2 DrinkReady;
+        #### A 0 LoadSprites(1);
+        #### ABCDEFGHI 2 DrinkReady;
+        #### A 0 Consume;
+        #### JKLMNOPQRSTUVWXYZ 2 DrinkReady;
+        #### A 0 LoadSprites(2);
+        #### AB 2 DrinkReady;
         TNT1 A 0 A_StartSound("hh/bottle_break", CHAN_AUTO);
         Goto Deselect;
     Fire:
@@ -223,7 +235,10 @@ class HH_Bottle : Actor {
 
 // Quick Revive: revives teammates faster; alone, it brings you back from going down
 class HH_QuickReviveMachine : HH_PerkMachine {
+    meta class<HH_Drink> soloDrink;     // the drink sold when playing alone
     int soloBuys;
+
+    property SoloDrink: soloDrink;
 
     Default {
         //$Category "Horde Hammer"
@@ -231,10 +246,11 @@ class HH_QuickReviveMachine : HH_PerkMachine {
         //$Sprite HHQRA0
         HH_PerkMachine.Cost 1500;
         HH_PerkMachine.Drink "HH_QuickReviveDrink";
+        HH_QuickReviveMachine.SoloDrink "HH_SoloReviveDrink";
     }
 
     override class<HH_Drink> CurrentDrink() {
-        return multiplayer? self.drink: (class<HH_Drink>)('HH_SoloReviveDrink');
+        return multiplayer? self.drink: self.soloDrink;
     }
 
     override int CurrentCost() {
