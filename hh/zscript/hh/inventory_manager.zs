@@ -173,7 +173,7 @@ class HH_InventoryManager : Inventory {
     }
 
     // Back in the game at a new round: the class's starting items, at least hh_respawn_points
-    // points, at a player start
+    // points, at a respawn spot (or a player start)
     void Respawn() {
         self.owner.ClearInventory();
         self.weapons.Clear();
@@ -195,12 +195,7 @@ class HH_InventoryManager : Inventory {
         }
         self.owner.A_SetHealth(HH_Settings.Int("hh_health"));
 
-        Vector3 position;
-        double angle;
-        [position, angle] = Level.PickPlayerStart(self.owner.PlayerNumber());
-        self.owner.SetOrigin(position, false);
-        self.owner.angle = angle;
-        self.owner.vel = (0, 0, 0);
+        HH_Players.MoveToSpawn(self.owner);
         if (self.startingWeapon != null) {
             self.owner.A_SelectWeapon(self.startingWeapon);
         }

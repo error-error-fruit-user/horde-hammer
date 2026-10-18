@@ -17,6 +17,7 @@ class HH_Rounds : EventHandler {
     int unspawnedZombies;
     int zombiesLeft;
     int lastRepulse[MAXPLAYERS];
+    Actor gameOverView;
 
     clearscope static HH_Rounds Get() {
         return HH_Rounds(EventHandler.Find('HH_Rounds'));
@@ -159,12 +160,27 @@ class HH_Rounds : EventHandler {
         self.EndGame();
     }
 
+    // The map's HH_GameOverCamera, or the camera it names (activated once, for everyone)
+    Actor FindGameOverView() {
+        let camera = HH_Util.FindFirst('HH_GameOverCamera');
+        if (camera == null || camera.args[0] == 0) {
+            return camera;
+        }
+        let named = Level.CreateActorIterator(camera.args[0]).Next();
+        if (named == null) {
+            return camera;
+        }
+        named.Activate(null);
+        return named;
+    }
+
     void EndGame() {
         if (self.phase == PHASE_GAME_OVER) {
             return;
         }
         self.phase = PHASE_GAME_OVER;
         self.phaseTics = 0;
+        self.gameOverView = self.FindGameOverView();
         for (let i = 0; i < MAXPLAYERS; ++i) {
             if (HH_Util.InGame(i)) {
                 players[i].mo.GiveInventory('HH_GameOverSpectate', 1);

@@ -104,6 +104,7 @@ class HHTest_Handler : EventHandler {
         if (manager.startingWeapon != null) {
             startName = manager.startingWeapon.GetClassName();
         }
+        Console.Printf("test: at %d %d", int(player.pos.x), int(player.pos.y));
         Console.Printf("test: round %d phase %d left %d unspawned %d alive %d | points %d health %d | active %d down %d spectating %d over %d | ready %s pending %s | weapons %s| perks %s| melee %s start %s",
             rounds.currentRound, rounds.phase, rounds.zombiesLeft, rounds.unspawnedZombies, spawning.zombies.Size(),
             HH_Points.CountOf(player), player.health,

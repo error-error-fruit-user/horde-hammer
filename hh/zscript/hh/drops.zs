@@ -94,16 +94,27 @@ class HH_DropPool : EventHandler {
         return HH_DropPool(EventHandler.Find('HH_DropPool'));
     }
 
-    // The drops that can come now, refilled once each has dropped
+    // The drops that can come now, refilled once each has dropped. A game's subclass of a drop
+    // replaces it: a drop with a pooled subclass stays out.
     void Fill() {
-        self.pool.Clear();
+        Array<class<HH_Drop> > pooled;
         foreach (type : AllActorClasses) {
             let dropType = (class<HH_Drop>)(type);
-            if (dropType == null) {
-                continue;
+            if (dropType != null && GetDefaultByType(dropType).pool > 0) {
+                pooled.Push(dropType);
+            }
+        }
+        self.pool.Clear();
+        foreach (dropType : pooled) {
+            let replaced = false;
+            foreach (other : pooled) {
+                if (other != dropType && HH_SettingsHandler.Derives(other, dropType)) {
+                    replaced = true;
+                    break;
+                }
             }
             let when = GetDefaultByType(dropType).pool;
-            if (when == 1 || (when == 2 && self.boxMoved)) {
+            if (!replaced && (when == 1 || (when == 2 && self.boxMoved))) {
                 self.pool.Push(dropType);
             }
         }

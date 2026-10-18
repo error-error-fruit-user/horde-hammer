@@ -8,6 +8,30 @@ class HH_Player : DoomPlayer {
     }
 }
 
+// Where a player comes back at a new round, instead of the map's player starts (which a game may
+// keep somewhere else, like nacht's intro room). Argument 0 picks the player: 1 for the first, 2 for
+// the second..., 0 for anyone without a spot of their own.
+class HH_RespawnSpot : Actor {
+    Default {
+        //$Category "Horde Hammer"
+        //$Title "Respawn Spot"
+        //$Sprite HHRSA0
+        //$Arg0 "Player"
+        //$Arg0Tooltip "1 for the first player, 2 for the second...; 0 for anyone"
+        RenderStyle "None";
+        +NOBLOCKMAP
+        +NOGRAVITY
+        +DONTSPLASH
+        +NOTONAUTOMAP
+    }
+
+    States {
+    Spawn:
+        TNT1 A -1;
+        Stop;
+    }
+}
+
 class HH_Players : EventHandler {
     clearscope static HH_Players Get() {
         return HH_Players(EventHandler.Find('HH_Players'));
@@ -60,6 +84,38 @@ class HH_Players : EventHandler {
         if (rounds != null && rounds.IsStarted() && !rounds.IsOver()) {
             rounds.CheckGameOver();
         }
+    }
+
+    // The respawn spot for player `number`: their own, else one of the shared ones, else null
+    static HH_RespawnSpot SpotFor(int number) {
+        Array<HH_RespawnSpot> shared;
+        let iterator = ThinkerIterator.Create('HH_RespawnSpot');
+        HH_RespawnSpot spot;
+        while (spot = HH_RespawnSpot(iterator.Next())) {
+            if (spot.args[0] == number + 1) {
+                return spot;
+            } else if (spot.args[0] == 0) {
+                shared.Push(spot);
+            }
+        }
+        return shared.Size() != 0? shared[number % shared.Size()]: null;
+    }
+
+    // Puts a player at their respawn spot, or at a player start when the map has none
+    static void MoveToSpawn(Actor pawn) {
+        let number = pawn.PlayerNumber();
+        let spot = HH_Players.SpotFor(number);
+        Vector3 position;
+        double angle;
+        if (spot != null) {
+            position = spot.pos;
+            angle = spot.angle;
+        } else {
+            [position, angle] = Level.PickPlayerStart(number);
+        }
+        pawn.SetOrigin(position, false);
+        pawn.angle = angle;
+        pawn.vel = (0, 0, 0);
     }
 
     // A new round: everyone watching comes back

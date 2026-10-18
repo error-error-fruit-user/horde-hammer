@@ -206,6 +206,9 @@ class HH_HudHandler : EventHandler {
             return;
         }
         let rounds = HH_Rounds.Get();
+        if (rounds != null && !rounds.IsStarted() && !HH_Settings.Bool("hh_hud_before_start")) {
+            return;
+        }
         if (manager.gameOver) {
             self.DrawGameOver(rounds);
             return;

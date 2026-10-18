@@ -5,7 +5,8 @@ usage: python3 tools/testmap.py
 
 Dependency-free Python 3.8+. The room is 2048x1024 with four player starts, two spawners in zone 0
 and one in zone 1 behind a door, two mystery box locations (the first always starts), the four perk
-machines, debris, a spectator spot and a game over camera. The engine builds the nodes itself.
+machines, debris, a spectator spot, a game over camera and two respawn spots (one for the first
+player, one shared). The engine builds the nodes itself.
 """
 
 import os
@@ -25,7 +26,8 @@ THINGS = [
     (27002, 1000, 800, 0, (1, 0, 0, 0, 0)),
     (27003, 1200, 512, 0, ()),
     (27008, 64, 64, 0, ()),
-    (27009, 1024, 512, 90, ()),
+    (27009, 1024, 512, 90, (0,)),
+    (27011, 512, 300, 0, (1,)), (27011, 512, 700, 0, (0,)),
 ]
 
 

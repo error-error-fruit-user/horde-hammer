@@ -146,7 +146,8 @@ def main():
         thing(f"sprites/hh/drops/{name}a0.png", box(24, 24, color, label))
     # Editor-only markers (invisible in the game)
     for name, color, label in [("hhsp", (200, 40, 40, 255), "Z"), ("hhbl", (90, 60, 30, 255), "B"),
-                               ("hhss", (40, 40, 200, 255), "S"), ("hhgc", (120, 0, 120, 255), "C")]:
+                               ("hhss", (40, 40, 200, 255), "S"), ("hhgc", (120, 0, 120, 255), "C"),
+                               ("hhrs", (40, 160, 40, 255), "R")]:
         thing(f"sprites/hh/editor/{name}a0.png", box(16, 16, color, label))
 
     # First person: the drink (four frames, the bottle tipping up) and the kick (four frames,

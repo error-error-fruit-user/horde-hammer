@@ -20,12 +20,16 @@ class HH_SpectatorSpot : Actor {
     }
 }
 
-// What everyone sees when the game is over (optional: without one they see where they stood)
+// What everyone sees when the game is over (optional: without one they see where they stood).
+// Argument 0 can name another thing by TID to look through instead (a moving camera on a path),
+// which is activated when the game ends.
 class HH_GameOverCamera : Actor {
     Default {
         //$Category "Horde Hammer"
         //$Title "Game Over Camera"
         //$Sprite HHGCA0
+        //$Arg0 "Camera TID"
+        //$Arg0Tooltip "0: look through this thing. Otherwise the TID of a camera to activate and look through."
         RenderStyle "None";
         +NOBLOCKMAP
         +NOGRAVITY
@@ -147,7 +151,8 @@ class HH_GameOverSpectate : Inventory {
         other.TakeInventory('HH_LastStand', 1);
         other.TakeInventory('HH_Spectate', 1);
         HH_Spectate.Hide(other, true);
-        let camera = HH_Util.FindFirst('HH_GameOverCamera');
+        let rounds = HH_Rounds.Get();
+        let camera = rounds != null? rounds.gameOverView: null;
         if (other.player != null) {
             other.player.camera = camera != null? camera: other;
         }

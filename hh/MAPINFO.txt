@@ -19,4 +19,5 @@ DoomEdNums {
     27008 = "HH_SpectatorSpot"
     27009 = "HH_GameOverCamera"
     27010 = "HH_Zombie"
+    27011 = "HH_RespawnSpot"
 }

@@ -41,8 +41,9 @@ They appear in Ultimate Doom Builder under **Horde Hammer**, with named argument
 | 27006 | `HH_SpeedColaMachine` | Speed Cola (faster reloads) | |
 | 27007 | `HH_DoubleTapMachine` | Double Tap (faster fire, double damage) | |
 | 27008 | `HH_SpectatorSpot` | Where spectators' bodies wait (optional) | |
-| 27009 | `HH_GameOverCamera` | What everyone sees at the end (optional) | |
+| 27009 | `HH_GameOverCamera` | What everyone sees at the end (optional) | 0: the TID of a camera to activate and look through instead |
 | 27010 | `HH_Zombie` | A zombie placed by hand | |
+| 27011 | `HH_RespawnSpot` | Where players come back at a new round, instead of the player starts (optional) | 0: player (1 the first...), 0 anyone |
 
 Wall buys have no number of their own: a game subclasses `HH_WallBuy` for each weapon, setting `HH_WallBuy.Weapon` and `HH_WallBuy.Cost`, gives it its own chalk outline sprite and a number in its `MAPINFO`.
 
@@ -50,7 +51,7 @@ Buying a door opens its zones, and the spawners in them start spawning. A door's
 
 ### Settings
 
-Every setting is a CVar, listed with its meaning in `hh/CVARINFO.txt`: points and costs, zombie health, count and speed per round, spawn timing, the box, drops, revive times, and switches like `hh_kick` and `hh_auto_start`. A host changes them like any CVar (`hh_box_cost 500`).
+Every setting is a CVar, listed with its meaning in `hh/CVARINFO.txt`: points and costs, zombie health, count and speed per round, spawn timing, the box, drops, revive times, and switches like `hh_kick`, `hh_auto_start` and `hh_hud_before_start` (off for a game with an intro). A host changes them like any CVar (`hh_box_cost 500`).
 
 A game sets its own defaults by subclassing `HH_Defaults` (the engine has no other way for a mod to change a library's CVar defaults). The CVars start at -1, which means "the game's default":
 
@@ -104,6 +105,7 @@ Everything a player sees or hears can be replaced without touching the library:
 - **Sprites**: the placeholders are drawn by `tools/placeholders.py` (sprite names starting with `HH`, in `hh/sprites/hh/` and `hh/graphics/hh/`). A game ships files with the same names, or uses its own sprites in its subclasses.
 - **Sounds**: every sound is a name starting with `hh/` (`hh/purchase`, `hh/round_start`...) in `hh/SNDINFO.txt`, pointing at Doom's own until a game's SNDINFO defines the same name.
 - **Text**: every string is a `HH_` id in `hh/LANGUAGE.txt`; a game's LANGUAGE redefines any of them.
+- **Drops**: subclass one (`MyMap_Instakill : HH_Instakill` with its own Spawn states) and the subclass drops instead of the original.
 - **Zombies**: `HH_Zombie` walks with the IWAD's former human sprites; subclass it with your own states and set `hh_zombie_class`. A random zombie set subclasses `HH_ZombieSpawner` (like `HH_VariedZombie`, Doom's monsters).
 
 ### Map scripts and events
