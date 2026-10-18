@@ -9,7 +9,8 @@
 //         }
 //     }
 //
-// If several subclasses exist, the most derived one wins. A host who sets a CVar overrides both.
+// If several subclasses exist, the deepest wins, and between equals the one loaded last (so a game
+// beats a helper loaded before it). A host who sets a CVar overrides both.
 
 class HH_Defaults play {
     virtual void Fill(HH_SettingsHandler settings) {
@@ -92,14 +93,30 @@ class HH_SettingsHandler : EventHandler {
     void Build() {
         self.keys.Clear();
         self.values.Clear();
+        // The deepest subclass wins; between equals, the one loaded last (the game, after anything
+        // loaded before it)
         class<HH_Defaults> chosen = 'HH_Defaults';
+        let chosenDepth = 0;
         foreach (type : AllClasses) {
             let defaults = (class<HH_Defaults>)(type);
-            if (defaults != null && HH_SettingsHandler.Derives(defaults, chosen)) {
+            if (defaults == null) {
+                continue;
+            }
+            let depth = HH_SettingsHandler.Depth(defaults);
+            if (depth >= chosenDepth) {
                 chosen = defaults;
+                chosenDepth = depth;
             }
         }
         HH_Defaults(new(chosen)).Fill(self);
+    }
+
+    static int Depth(class<Object> type) {
+        let depth = 0;
+        for (let parent = type; parent != null && parent != 'HH_Defaults'; parent = parent.GetParentClass()) {
+            ++depth;
+        }
+        return depth;
     }
 
     static bool Derives(class<Object> type, class<Object> ancestor) {

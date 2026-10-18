@@ -110,7 +110,6 @@ class HH_HudHandler : EventHandler {
     const ICON_SIZE = 12;
     const ICON_GAP = 2;
     const REVIVE_WIDTH = 82;
-    const REVIVE_HEIGHT = 6;
 
     // The parts of the HUD and the settings each has, for the reset
     static const String PARTS[] = { "points", "round", "ammo", "perks", "powerups", "hint", "revive", "messages" };
@@ -198,6 +197,18 @@ class HH_HudHandler : EventHandler {
         }
         Screen.DrawTexture(texture, false, x, y, DTA_DestWidthF, width, DTA_DestHeightF, height,
             DTA_LeftOffset, 0, DTA_TopOffset, 0, DTA_Alpha, alpha * HH_HudHandler.Setting("hh_hud_alpha"));
+    }
+
+    // A picture's width for a height (or the other way around), keeping its own proportions, so a
+    // game's art of any size fits
+    static ui double WidthFor(TextureID texture, double height) {
+        let [width, tall] = TexMan.GetSize(texture);
+        return tall > 0? height * width / tall: height;
+    }
+
+    static ui double HeightFor(TextureID texture, double width) {
+        let [wide, height] = TexMan.GetSize(texture);
+        return wide > 0? width * height / wide: width;
     }
 
     override void RenderOverlay(RenderEvent e) {
@@ -294,9 +305,12 @@ class HH_HudHandler : EventHandler {
         let scale = HH_HudHandler.ScaleOf("perks");
         let place = HH_HudHandler.PlaceOf("perks");
         let size = HH_HudHandler.ICON_SIZE * scale;
-        let step = (HH_HudHandler.ICON_SIZE + HH_HudHandler.ICON_GAP) * scale;
+        let x = place.x;
         for (let i = 0; i < manager.perks.Size(); ++i) {
-            HH_HudHandler.Picture(GetDefaultByType(manager.perks[i]).Icon, place.x + i * step, place.y, size, size);
+            let icon = GetDefaultByType(manager.perks[i]).Icon;
+            let width = HH_HudHandler.WidthFor(icon, size);
+            HH_HudHandler.Picture(icon, x, place.y, width, size);
+            x += width + HH_HudHandler.ICON_GAP * scale;
         }
     }
 
@@ -317,15 +331,20 @@ class HH_HudHandler : EventHandler {
         let scale = HH_HudHandler.ScaleOf("powerups");
         let place = HH_HudHandler.PlaceOf("powerups");
         let size = HH_HudHandler.ICON_SIZE * 1.5 * scale;
-        let step = size + HH_HudHandler.ICON_GAP * scale;
-        let left = place.x - (powers.Size() * step - HH_HudHandler.ICON_GAP * scale) / 2;
-        for (let i = 0; i < powers.Size(); ++i) {
+        let gap = HH_HudHandler.ICON_GAP * scale;
+        let total = -gap;
+        foreach (power : powers) {
+            total += HH_HudHandler.WidthFor(power.Icon, size) + gap;
+        }
+        let x = place.x - total / 2;
+        foreach (power : powers) {
+            let width = HH_HudHandler.WidthFor(power.Icon, size);
             // Blinking for the last three seconds, faster for the last one
-            let tics = powers[i].EffectTics;
-            if (tics < TICRATE * 3 && (tics / (tics < TICRATE? 4: 8)) % 2 == 0) {
-                continue;
+            let tics = power.EffectTics;
+            if (tics >= TICRATE * 3 || (tics / (tics < TICRATE? 4: 8)) % 2 != 0) {
+                HH_HudHandler.Picture(power.Icon, x, place.y, width, size);
             }
-            HH_HudHandler.Picture(powers[i].Icon, left + i * step, place.y, size, size);
+            x += width + gap;
         }
     }
 
@@ -344,11 +363,18 @@ class HH_HudHandler : EventHandler {
         }
         let scale = HH_HudHandler.ScaleOf("revive");
         let place = HH_HudHandler.PlaceOf("revive");
+        let back = TexMan.CheckForTexture("HHRVBACK");
+        let fore = TexMan.CheckForTexture("HHRVFORE");
         let width = HH_HudHandler.REVIVE_WIDTH * scale;
-        let height = HH_HudHandler.REVIVE_HEIGHT * scale;
+        let height = HH_HudHandler.HeightFor(back, width);
         let left = place.x - width / 2;
-        HH_HudHandler.Picture(TexMan.CheckForTexture("HHRVBACK"), left, place.y, width, height);
-        HH_HudHandler.Picture(TexMan.CheckForTexture("HHRVFORE"), left, place.y, width * manager.hud.revive, height);
+        HH_HudHandler.Picture(back, left, place.y, width, height);
+        // The front shows as much of itself as the revive has done
+        if (fore.IsValid()) {
+            Screen.DrawTexture(fore, false, left, place.y, DTA_DestWidthF, width, DTA_DestHeightF, height,
+                DTA_LeftOffset, 0, DTA_TopOffset, 0, DTA_ClipRight, int(left + width * manager.hud.revive),
+                DTA_Alpha, HH_HudHandler.Setting("hh_hud_alpha"));
+        }
     }
 
     ui void DrawMessages() {
