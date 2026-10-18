@@ -13,6 +13,7 @@ class HH_LastStand : Inventory {
     int reviver;
     int ticsLeft;
     class<Weapon> pistol;
+    bool pistolOut;
     HH_ReviveHandle handle;
 
     Default {
@@ -58,8 +59,10 @@ class HH_LastStand : Inventory {
         pawn.bInvulnerable = true;
         pawn.bNoThrustWhenInvul = true;
 
+        // The pistol comes out on the first tick: a weapon chosen while the damage that downed the
+        // player is still being dealt doesn't stay chosen
         self.pistol = HH_LastStand.ChoosePistol(other, manager);
-        manager.GiveTemporary(self.pistol);
+        self.pistolOut = false;
         if (!self.solo) {
             self.handle = HH_ReviveHandle.SpawnFor(self);
         }
@@ -76,6 +79,13 @@ class HH_LastStand : Inventory {
         super.Tick();
         if (self.owner == null || self.bDestroyed) {
             return;
+        }
+        if (!self.pistolOut) {
+            self.pistolOut = true;
+            let manager = HH_InventoryManager.Of(self.owner);
+            if (manager != null) {
+                manager.GiveTemporary(self.pistol);
+            }
         }
         if (self.handle != null && self.handle.progress > 0) {
             return;     // nobody bleeds out while being revived

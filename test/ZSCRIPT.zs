@@ -30,11 +30,25 @@ class HHTest_Handler : EventHandler {
             self.UseNearest(player, e.Name.Mid(11));
         } else if (e.Name == 'hhtest_down') {
             player.DamageMobj(null, null, player.health + 1000, 'None');
+            Console.Printf("test: after down pending %s", player.player.PendingWeapon != null && player.player.PendingWeapon != WP_NOCHANGE? player.player.PendingWeapon.GetClassName(): 'none');
         } else if (e.Name == 'hhtest_killall') {
             let spawning = HH_Spawning.Get();
             if (spawning != null) {
                 spawning.KillAll();
             }
+        } else if (e.Name == 'hhtest_ammo') {
+            let ammo = player.FindInventory('HHTest_RifleAmmo');
+            let rifle = HHTest_Rifle(player.FindInventory('HHTest_Rifle'));
+            Console.Printf("test: rifle %d magazine %d reserve %d", rifle != null, rifle != null? rifle.activeAmmo: -1, ammo != null? ammo.amount: -1);
+            if (ammo != null) {
+                ammo.amount = 1;
+            }
+        } else if (e.Name == 'hhtest_pistol') {
+            let choice = HH_LastStand.ChoosePistol(player, manager);
+            let rifle = HH_Weapon(player.FindInventory('HHTest_Rifle'));
+            Console.Printf("test: last stand pistol %s, rifle rank %d", choice != null? choice.GetClassName(): 'none', rifle != null? rifle.lastStand: -1);
+            let selected = player.A_SelectWeapon('HHTest_Rifle');
+            Console.Printf("test: select rifle %d pending %s", selected, player.player.PendingWeapon != null && player.player.PendingWeapon != WP_NOCHANGE? player.player.PendingWeapon.GetClassName(): 'none');
         } else if (e.Name == 'hhtest_repulse_wait') {
             Console.Printf("phase %d", HH_Rounds.Get().phase);
         }
@@ -74,6 +88,10 @@ class HHTest_Handler : EventHandler {
         foreach (perk : manager.perks) {
             perks = perks..perk.GetClassName().." ";
         }
+        String pendingName = "none";
+        if (player.player.PendingWeapon != null && player.player.PendingWeapon != WP_NOCHANGE) {
+            pendingName = player.player.PendingWeapon.GetClassName();
+        }
         String readyName = "none";
         if (player.player.ReadyWeapon != null) {
             readyName = player.player.ReadyWeapon.GetClassName();
@@ -86,10 +104,10 @@ class HHTest_Handler : EventHandler {
         if (manager.startingWeapon != null) {
             startName = manager.startingWeapon.GetClassName();
         }
-        Console.Printf("test: round %d phase %d left %d unspawned %d alive %d | points %d health %d | active %d down %d spectating %d over %d | ready %s | weapons %s| perks %s| melee %s start %s",
+        Console.Printf("test: round %d phase %d left %d unspawned %d alive %d | points %d health %d | active %d down %d spectating %d over %d | ready %s pending %s | weapons %s| perks %s| melee %s start %s",
             rounds.currentRound, rounds.phase, rounds.zombiesLeft, rounds.unspawnedZombies, spawning.zombies.Size(),
             HH_Points.CountOf(player), player.health,
             manager.IsActive(), manager.lastStand, manager.spectating, manager.gameOver,
-            readyName, weapons, perks, meleeName, startName);
+            readyName, pendingName, weapons, perks, meleeName, startName);
     }
 }

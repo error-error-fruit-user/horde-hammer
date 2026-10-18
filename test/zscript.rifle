@@ -1,0 +1,51 @@
+version "5.0.0"
+
+// A drop-in weapon, laid out the way a game's weapons should be: its own zscript.<weapon> and
+// sndinfo.<weapon> next to the game's lumps, nothing else to edit. Drawn with the IWAD's pistol.
+
+class HHTest_RifleAmmo : Ammo {
+    Default {
+        Inventory.Amount 8;
+        Inventory.MaxAmount 80;
+    }
+}
+
+class HHTest_Rifle : HH_Weapon {
+    Default {
+        Tag "Test Rifle";
+        HH_Weapon.ActiveAmmo 8;
+        HH_Weapon.ReloadFrameRate 3;
+        HH_Weapon.FireFrameRate 2;
+        HH_Weapon.KeepPartialReload true;
+        HH_Weapon.BoxWeight 5;
+        HH_Weapon.LastStand 10;
+        Weapon.AmmoType "HHTest_RifleAmmo";
+        Weapon.AmmoGive 32;
+    }
+
+    States {
+    Spawn:
+        PIST A -1;
+        Stop;
+    Select:
+        PISG A 1 A_Raise;
+        Loop;
+    Deselect:
+        PISG A 1 A_Lower;
+        Loop;
+    Ready:
+        PISG A 1 ReadyWeapon;
+        Loop;
+    Fire:
+        PISG A 0 WhenNoActiveAmmo("Reload");
+        PISF A 2 Bright { A_StartSound("hhtest/rifle", CHAN_WEAPON); ShootBullets(1, 15, 1); }
+        PISG BC 2 FF;
+        Goto Ready;
+    Reload:
+        PISG A 0 WhenFullAmmo("Ready");
+        PISG A 0 WhenNoAmmo("Ready");
+        PISG BC 5 FR;
+        PISG C 0 Reload;
+        Goto Ready;
+    }
+}
