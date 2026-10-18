@@ -199,6 +199,12 @@ class HH_HudHandler : EventHandler {
             DTA_LeftOffset, 0, DTA_TopOffset, 0, DTA_Alpha, alpha * HH_HudHandler.Setting("hh_hud_alpha"));
     }
 
+    // The font for numbers: the big font, unless a game's or IWAD's big font is missing digits,
+    // then the engine's own, which has everything
+    static ui Font NumberFont() {
+        return bigFont.CanPrint("0123456789/-+")? bigFont: NewSmallFont;
+    }
+
     // A picture's width for a height (or the other way around), keeping its own proportions, so a
     // game's art of any size fits
     static ui double WidthFor(TextureID texture, double height) {
@@ -248,7 +254,7 @@ class HH_HudHandler : EventHandler {
         }
         let scale = HH_HudHandler.ScaleOf("points");
         let place = HH_HudHandler.PlaceOf("points");
-        HH_HudHandler.Text(bigFont, HH_HudHandler.POINTS_COLOR, place, String.Format("%d", HH_Points.CountOf(manager.owner)), -1, scale);
+        HH_HudHandler.Text(HH_HudHandler.NumberFont(), HH_HudHandler.POINTS_COLOR, place, String.Format("%d", HH_Points.CountOf(manager.owner)), -1, scale);
         foreach (delta : manager.hud.deltas) {
             let tint = delta.value < 0? HH_HudHandler.LOSS_COLOR: delta.value >= 100? HH_HudHandler.BIG_GAIN_COLOR: HH_HudHandler.GAIN_COLOR;
             let text = delta.value < 0? String.Format("-%d", -delta.value): String.Format("+%d", delta.value);
@@ -270,7 +276,7 @@ class HH_HudHandler : EventHandler {
             tint = Font.CR_UNTRANSLATED;
         }
         let place = HH_HudHandler.PlaceOf("round");
-        HH_HudHandler.Text(bigFont, tint, place, String.Format("%d", rounds.currentRound), 1, HH_HudHandler.ScaleOf("round"), alpha);
+        HH_HudHandler.Text(HH_HudHandler.NumberFont(), tint, place, String.Format("%d", rounds.currentRound), 1, HH_HudHandler.ScaleOf("round"), alpha);
     }
 
     ui void DrawAmmo(HH_InventoryManager manager) {
@@ -295,7 +301,7 @@ class HH_HudHandler : EventHandler {
             return;
         }
         let place = HH_HudHandler.PlaceOf("ammo");
-        HH_HudHandler.Text(bigFont, HH_HudHandler.AMMO_COLOR, place, text, 1, HH_HudHandler.ScaleOf("ammo"));
+        HH_HudHandler.Text(HH_HudHandler.NumberFont(), HH_HudHandler.AMMO_COLOR, place, text, 1, HH_HudHandler.ScaleOf("ammo"));
     }
 
     ui void DrawPerks(HH_InventoryManager manager) {
