@@ -1,0 +1,27 @@
+#library "hhtest"
+#include "zcommon.acs"
+#include "hh.acs"
+
+// Loaded on every map by test/LOADACS.txt: listens to events and calls back into the library
+
+script "HHTest_Open" OPEN {
+    HH_Listen("round_started", "HHTest_RoundStarted");
+    HH_Listen("game_over", "HHTest_GameOver");
+    HH_Listen("door_opened", "HHTest_DoorOpened");
+}
+
+script "HHTest_RoundStarted" (int roundNumber) {
+    Log(s:"acs: round started ", d:roundNumber, s:", current ", d:HH_CurrentRound(), s:", zombies left ", d:HH_ZombiesLeft(), s:", player 0 points ", d:HH_GetPoints(0));
+    if (roundNumber == 1) {
+        HH_GivePoints(0, 3);
+        Log(s:"acs: gave 3 points, now ", d:HH_GetPoints(0), s:", zone 1 open ", d:HH_IsZoneOpen(1));
+    }
+}
+
+script "HHTest_DoorOpened" (int player, int tid, int cost) {
+    Log(s:"acs: player ", d:player, s:" opened door ", d:tid, s:" for ", d:cost, s:", zone 1 open ", d:HH_IsZoneOpen(1));
+}
+
+script "HHTest_GameOver" (int roundNumber) {
+    Log(s:"acs: game over at round ", d:roundNumber);
+}

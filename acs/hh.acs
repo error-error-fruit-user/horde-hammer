@@ -1,0 +1,33 @@
+// Horde Hammer's calls for ACS. Copy this file next to a map's scripts (or put this folder on the
+// compiler's include path) and #include "hh.acs" after zcommon.acs. Each function wraps
+// ScriptCall("HH_Acs", ...), documented in hh/zscript/hh/acs.zs; players are PlayerNumber()s.
+//
+// Events: HH_Listen("round_started", "MyScript") runs the named script MyScript with the event's
+// numbers as its arguments every time a round starts. The events are listed in
+// hh/zscript/hh/events.zs.
+
+function int HH_CurrentRound(void) { return ScriptCall("HH_Acs", "CurrentRound"); }
+function int HH_ZombiesLeft(void) { return ScriptCall("HH_Acs", "ZombiesLeft"); }
+function int HH_ZombiesAlive(void) { return ScriptCall("HH_Acs", "ZombiesAlive"); }
+function bool HH_IsStarted(void) { return ScriptCall("HH_Acs", "IsStarted"); }
+function bool HH_IsOver(void) { return ScriptCall("HH_Acs", "IsOver"); }
+function bool HH_IsBetweenRounds(void) { return ScriptCall("HH_Acs", "IsBetweenRounds"); }
+function void HH_StartGame(void) { ScriptCall("HH_Acs", "StartGame"); }
+function void HH_EndGame(void) { ScriptCall("HH_Acs", "EndGame"); }
+function void HH_NextRound(void) { ScriptCall("HH_Acs", "NextRound"); }
+function void HH_OpenZone(int zone) { ScriptCall("HH_Acs", "OpenZone", zone); }
+function bool HH_IsZoneOpen(int zone) { return ScriptCall("HH_Acs", "IsZoneOpen", zone); }
+function void HH_PauseSpawning(bool paused) { ScriptCall("HH_Acs", "PauseSpawning", paused); }
+function void HH_KillAllZombies(void) { ScriptCall("HH_Acs", "KillAllZombies"); }
+function int HH_GetPoints(int player) { return ScriptCall("HH_Acs", "GetPoints", player); }
+function void HH_GivePoints(int player, int amount) { ScriptCall("HH_Acs", "GivePoints", player, amount); }
+function bool HH_TakePoints(int player, int amount) { return ScriptCall("HH_Acs", "TakePoints", player, amount); }
+function bool HH_IsActive(int player) { return ScriptCall("HH_Acs", "IsActive", player); }
+function bool HH_IsDown(int player) { return ScriptCall("HH_Acs", "IsDown", player); }
+function bool HH_IsSpectating(int player) { return ScriptCall("HH_Acs", "IsSpectating", player); }
+function void HH_RevivePlayer(int player) { ScriptCall("HH_Acs", "RevivePlayer", player); }
+function bool HH_GivePerk(int player, str perk) { return ScriptCall("HH_Acs", "GivePerk", player, perk); }
+function void HH_MoveBox(void) { ScriptCall("HH_Acs", "MoveBox"); }
+function void HH_StartFireSale(void) { ScriptCall("HH_Acs", "StartFireSale"); }
+function void HH_Listen(str eventName, str scriptName) { ScriptCall("HH_Acs", "Listen", eventName, scriptName); }
+function void HH_Unlisten(str eventName, str scriptName) { ScriptCall("HH_Acs", "Unlisten", eventName, scriptName); }
