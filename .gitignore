@@ -4,3 +4,4 @@ __pycache__/
 *.dbs
 *.wad.backup*
 *.wad.autosave*
+/CLAUDE.md
