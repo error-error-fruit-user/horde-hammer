@@ -115,9 +115,16 @@ Horde Hammer has no guns. A game's weapons subclass `HH_Weapon`, which adds a ma
 | `HH_Weapon.LastStand` | Going down pulls out the held weapon with the highest value (0 for never) |
 | `HH_Weapon.Upgrade` | Its upgraded version, which wall buys sell ammo for |
 
-Last stand and Max Ammo find weapons by these properties, so there is no list to edit. The box searches the player's own weapon slots (their class's `Player.WeaponSlot`, and any weapon's `Weapon.SlotNumber`), so every player class gets its own roster, a mod's included (Brutal Doom, Project Brutality): an `HH_Weapon` comes as often as its box weight, any other weapon but melee at 1, unless it is `CHEATNOTWEAPON` (a mod's variant of another, like Brutal Doom's purist and dual ones). A drop-in weapon that should come from the box needs a slot. The box, wall buys and weapons lying on the floor never give a weapon the player already holds: the same class, one derived from it or one it derives from, or its upgrade.
+Last stand and Max Ammo find weapons by these properties, so there is no list to edit. The box searches the player's own weapon slots (their class's `Player.WeaponSlot`, and any weapon's `Weapon.SlotNumber`), so every player class gets its own roster, a mod's included (Brutal Doom, Project Brutality): an `HH_Weapon` comes as often as its box weight, any other weapon but melee at 1, unless it is `CHEATNOTWEAPON` (a mod's variant of another, like Brutal Doom's purist and dual ones). A packaged weapon that should come from the box needs a slot. The box, wall buys and weapons lying on the floor never give a weapon the player already holds: the same class, one derived from it or one it derives from, or its upgrade.
 
-**Drop-in weapons.** A weapon is a folder of files a game copies into its pk3: its sprites and sounds in their own folders, plus `zscript.<weapon>` and `sndinfo.<weapon>` at the root. Files at the root whose names differ only in extension all load, so nothing else in the game changes. Each weapon brings its own ammo type. `test/zscript.rifle` is a small example.
+**Weapon packages.** A weapon is easiest to share as a folder of its own that a game copies into its pk3: `weapons/<weapon>/` with its script (`<weapon>.zs`), its sound names (`sndinfo.txt`) and its sound files, plus its sprites in `sprites/weapons/<weapon>/` (sprites only load from `sprites/`). Files in folders don't load by themselves, so the game adds one line for each weapon to its root `ZSCRIPT.zs` and one to its `SNDINFO.txt`:
+
+```
+#include "weapons/colt/colt.zs"             // ZSCRIPT.zs
+$include "weapons/colt/sndinfo.txt"         // SNDINFO.txt
+```
+
+Its `sndinfo.txt` names its files by path (`weapons/colt/sounds/fire.ogg`), and its script has no `version` line (only the root `ZSCRIPT.zs` does). Each weapon brings its own ammo type. Nacht des Schreckens and spawn-room lay out their weapons this way; spawn-room's rifle is a small, commented example. A weapon can also skip the two lines by putting `zscript.<weapon>` and `sndinfo.<weapon>` at the pk3's root, since root files whose names differ only in extension all load (`test/zscript.rifle` does this).
 
 ### Art, sounds and text
 
