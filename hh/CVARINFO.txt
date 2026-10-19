@@ -23,6 +23,7 @@ server int hh_kick_enabled = -1;                        // the kick key works
 server int hh_kick_damage = -1;                 
 server int hh_hud_before_start = -1;            // the HUD shows before round 1 (a game with an intro turns it off)
 server int hh_drop_weapon_cost = -1;             // points to drop a weapon (double tap the drop key)
+server int hh_pad_layout = -1;                   // offer each player the zombies controller layout, once (controller.zs)
 
 // Rounds
 server int hh_auto_start = -1;                   // start round 1 by itself (a game with an intro turns it off and starts it itself)
@@ -76,6 +77,7 @@ server int hh_solo_quick_revive_cost = -1;
 
 // Each player's own
 user bool hh_toggled_zoom = true;               // zoom stays in until pressed again
+user bool hh_pad_layout_set = false;            // this player was offered the controller layout (false offers it again)
 
 // The HUD, each player's own: where each part is (0 to 1 across and down the screen), how big it
 // is, and whether it shows. The menu has a reset.

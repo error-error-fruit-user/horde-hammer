@@ -152,6 +152,9 @@ class HH_Input : EventHandler {
     }
 
     override bool InputProcess(InputEvent e) {
+        if (HH_ControllerLayout.AskOnPress(e)) {
+            return true;
+        }
         if (e.Type != InputEvent.Type_KeyDown || HH_Util.ManagerOf(consolePlayer) == null) {
             return false;
         }

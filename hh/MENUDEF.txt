@@ -13,6 +13,7 @@ OptionValue "HH_AmmoShow" {
 OptionMenu "HH_Options" {
     Title "$HH_MENU_OPTIONS"
     Option "$HH_MENU_TOGGLED_ZOOM", "hh_toggled_zoom", "OnOff"
+    SafeCommand "$HH_MENU_PAD_LAYOUT", "hh_pad_layout_set false"
     StaticText ""
     Submenu "$HH_MENU_HUD", "HH_HudOptions"
 }

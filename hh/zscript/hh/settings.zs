@@ -30,6 +30,7 @@ class HH_Defaults play {
         settings.Set("hh_kick_damage", "40");
         settings.Set("hh_hud_before_start", "1");  // the HUD shows before round 1 (a game with an intro turns it off)
         settings.Set("hh_drop_weapon_cost", "750");  // points to drop a weapon (double tap the drop key)
+        settings.Set("hh_pad_layout", "1");  // offer each player the zombies controller layout, once (controller.zs)
         settings.Set("hh_auto_start", "1");  // start round 1 by itself (a game with an intro turns it off and starts it itself)
         settings.Set("hh_start_delay", "105");  // tics before round 1 when it starts by itself
         settings.Set("hh_round_delay", "350");  // tics between the last zombie dying and repulsion

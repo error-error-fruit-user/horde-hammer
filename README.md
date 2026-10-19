@@ -77,6 +77,27 @@ class MyMap_Defaults : HH_Defaults {
 
 The kick and repulse keys are network events (in the controls menu under "Horde Hammer"), not `+user` buttons, so they don't clash with mods that use those.
 
+### Controllers
+
+The first time a player presses a controller button, Horde Hammer asks once whether to use the zombies layout (`hh_pad_layout_set` remembers the answer, and "Offer the zombies controller layout again" in Horde Hammer's options asks again). Yes rebinds these buttons, and only these:
+
+| Button | Does |
+|---|---|
+| Right trigger | Fire |
+| Left trigger | Zoom |
+| A | Use |
+| X | Reload |
+| Y | Swap weapon |
+| Right stick click | Kick |
+| Left stick click | Sprint |
+| Left bumper | Repulse |
+| Right bumper, twice | Drop weapon |
+| D-pad, clockwise from left | Weapons 1 to 4 |
+| Start | Pause |
+| Back | Main menu |
+
+It is a question, not a default, because UZDoom already binds most of these buttons and won't let a mod's default bindings take them, and only a menu may change bindings. A game that has its own layout turns the question off with `hh_pad_layout 0` in its `HH_Defaults`.
+
 ### The HUD
 
 Points, round, ammo, perks, power-ups, hints, the revive bar and messages are drawn on top of whatever status bar is in use. Each player places, sizes and hides every part in **Options → Horde Hammer Options → HUD Layout** (or the `hh_hud_*` CVars), with a reset at the bottom.
