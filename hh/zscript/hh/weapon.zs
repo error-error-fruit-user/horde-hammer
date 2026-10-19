@@ -156,31 +156,35 @@ class HH_Weapon : Weapon {
     }
 }
 
-// The weapons the mystery box can give: every HH_Weapon with a box weight, or, for a game whose
-// weapons aren't HH_Weapons (Brutal Doom, Project Brutality), whatever is in the player's slots
+// The weapons the mystery box can give: the ones in the player's weapon slots (their class's
+// Player.WeaponSlot, and any weapon's own Weapon.SlotNumber), so every player class, a mod's
+// included, gets its own roster. An HH_Weapon comes as often as its box weight (never at 0); any
+// other weapon but melee at 1.
 class HH_WeaponPool play {
     static void Gather(PlayerPawn player, out Array<class<Weapon> > weapons, out Array<int> weights) {
         weapons.Clear();
         weights.Clear();
-        foreach (type : AllActorClasses) {
-            let weaponType = (class<HH_Weapon>)(type);
-            if (weaponType != null && GetDefaultByType(weaponType).boxWeight > 0) {
-                weapons.Push(weaponType);
-                weights.Push(GetDefaultByType(weaponType).boxWeight);
-            }
-        }
-        if (weapons.Size() != 0 || player == null || player.player == null) {
+        if (player == null || player.player == null) {
             return;
         }
         let manager = HH_InventoryManager.Of(player);
         let slots = player.player.weapons;
-        for (let slot = 0; slot < 10; ++slot) {
+        for (let slot = 0; slot < PlayerPawn.NUM_WEAPON_SLOTS; ++slot) {
             for (let index = 0; index < slots.SlotSize(slot); ++index) {
                 let type = slots.GetWeapon(slot, index);
-                if (type != null && HH_InventoryManager.Counts(type) && (manager == null || type != manager.melee)
-                        && weapons.Find(type) == weapons.Size()) {
+                if (type == null || weapons.Find(type) != weapons.Size()) {
+                    continue;
+                }
+                let weight = 0;
+                let zombiesWeapon = (class<HH_Weapon>)(type);
+                if (zombiesWeapon != null) {
+                    weight = GetDefaultByType(zombiesWeapon).boxWeight;
+                } else if (HH_InventoryManager.Counts(type) && (manager == null || type != manager.melee)) {
+                    weight = 1;
+                }
+                if (weight > 0) {
                     weapons.Push(type);
-                    weights.Push(1);
+                    weights.Push(weight);
                 }
             }
         }

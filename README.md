@@ -94,7 +94,7 @@ Horde Hammer has no guns. A game's weapons subclass `HH_Weapon`, which adds a ma
 | `HH_Weapon.LastStand` | Going down pulls out the held weapon with the highest value (0 for never) |
 | `HH_Weapon.Upgrade` | Its upgraded version, which wall buys sell ammo for |
 
-The box, last stand and Max Ammo find weapons by these properties, so there is no list to edit. With weapons that aren't `HH_Weapon`s (Brutal Doom, Project Brutality), the box gives whatever is in the player's weapon slots instead.
+Last stand and Max Ammo find weapons by these properties, so there is no list to edit. The box searches the player's own weapon slots (their class's `Player.WeaponSlot`, and any weapon's `Weapon.SlotNumber`), so every player class gets its own roster, a mod's included (Brutal Doom, Project Brutality): an `HH_Weapon` comes as often as its box weight, any other weapon but melee at 1. A drop-in weapon that should come from the box needs a slot.
 
 **Drop-in weapons.** A weapon is a folder of files a game copies into its pk3: its sprites and sounds in their own folders, plus `zscript.<weapon>` and `sndinfo.<weapon>` at the root. Files at the root whose names differ only in extension all load, so nothing else in the game changes. Each weapon brings its own ammo type. `test/zscript.rifle` is a small example.
 

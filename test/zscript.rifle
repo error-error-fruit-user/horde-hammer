@@ -19,6 +19,7 @@ class HHTest_Rifle : HH_Weapon {
         HH_Weapon.KeepPartialReload true;
         HH_Weapon.BoxWeight 5;
         HH_Weapon.LastStand 10;
+        Weapon.SlotNumber 3;
         Weapon.AmmoType "HHTest_RifleAmmo";
         Weapon.AmmoGive 32;
     }
