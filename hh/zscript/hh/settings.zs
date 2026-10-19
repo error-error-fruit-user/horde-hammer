@@ -26,7 +26,7 @@ class HH_Defaults play {
         settings.Set("hh_regen_rate", "5");  // health healed per tic
         settings.Set("hh_weapon_switching", "1");  // Horde Hammer handles the weapon slot keys (turn off for mods with their own)
         settings.Set("hh_remove_items", "1");  // remove items that appear in the world (monster drops, map items)
-        settings.Set("hh_kick", "1");  // the kick key works
+        settings.Set("hh_kick_enabled", "1");  // the kick key works
         settings.Set("hh_kick_damage", "40");
         settings.Set("hh_hud_before_start", "1");  // the HUD shows before round 1 (a game with an intro turns it off)
         settings.Set("hh_drop_weapon_cost", "750");  // points to drop a weapon (double tap the drop key)

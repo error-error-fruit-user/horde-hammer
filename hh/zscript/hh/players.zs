@@ -193,9 +193,9 @@ class HH_Input : EventHandler {
             if (rounds != null && manager.IsActive()) {
                 rounds.Repulse(e.Player);
             }
-        } else if (e.Name == 'HH_Settings.Bool("hh_kick")') {
+        } else if (e.Name == 'HH_Settings.Bool("hh_kick_enabled")') {
             let kick = HH_KickItem(pawn.FindInventory('HH_KickItem'));
-            if (HH_Settings.Bool("hh_kick") && kick != null && manager.IsActive()) {
+            if (HH_Settings.Bool("hh_kick_enabled") && kick != null && manager.IsActive()) {
                 kick.Kick();
             }
         } else if (e.Name == 'hh_drop') {

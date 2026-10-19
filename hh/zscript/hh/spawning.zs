@@ -109,14 +109,16 @@ class HH_Spawning : EventHandler {
 
     class<Actor> ZombieClass() {
         class<Actor> type = HH_Settings.Str("hh_zombie_class");
-        if (type == null) {
-            if (!self.warnedClass) {
-                Console.Printf("Horde Hammer: hh_zombie_class \"%s\" isn't a class; spawning HH_Zombie", HH_Settings.Str("hh_zombie_class"));
-                self.warnedClass = true;
-            }
-            type = 'HH_Zombie';
+        if (type != null) {
+            return type;
         }
-        return type;
+        // A bad CVar value: the game's own zombie, else the library's
+        type = HH_Settings.Default("hh_zombie_class");
+        if (!self.warnedClass) {
+            Console.Printf("Horde Hammer: hh_zombie_class \"%s\" isn't a class; spawning %s", HH_Settings.Str("hh_zombie_class"), type != null? type.GetClassName(): 'HH_Zombie');
+            self.warnedClass = true;
+        }
+        return type != null? type: (class<Actor>)('HH_Zombie');
     }
 
     // Spawns a zombie and says whether it fit; a random zombie set counts once it has picked

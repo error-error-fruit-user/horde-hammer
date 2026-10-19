@@ -1,5 +1,5 @@
 // The kick: a quick melee on its own key (hh_kick, F by default) that works with any weapon in
-// hand, drawn on its own layer under the weapon. A game turns it off with hh_kick, or gives it its
+// hand, drawn on its own layer under the weapon. A game turns it off with hh_kick_enabled, or gives it its
 // own leg by replacing the HHKK sprites.
 
 class HH_KickItem : CustomInventory {

@@ -51,7 +51,7 @@ Buying a door opens its zones, and the spawners in them start spawning. A door's
 
 ### Settings
 
-Every setting is a CVar, listed with its meaning in `hh/CVARINFO.txt`: points and costs, zombie health, count and speed per round, spawn timing, the box, drops, revive times, and switches like `hh_kick`, `hh_auto_start` and `hh_hud_before_start` (off for a game with an intro). A host changes them like any CVar (`hh_box_cost 500`).
+Every setting is a CVar, listed with its meaning in `hh/CVARINFO.txt`: points and costs, zombie health, count and speed per round, spawn timing, the box, drops, revive times, and switches like `hh_kick_enabled`, `hh_auto_start` and `hh_hud_before_start` (off for a game with an intro). A host changes them like any CVar (`hh_box_cost 500`).
 
 A game sets its own defaults by subclassing `HH_Defaults` (the engine has no other way for a mod to change a library's CVar defaults). The CVars start at -1, which means "the game's default":
 
@@ -115,7 +115,7 @@ Map scripts call the library through `ScriptCall("HH_Acs", ...)`; `acs/hh.acs` w
 
 ### With Brutal Doom or Project Brutality
 
-Horde Hammer draws its HUD over theirs and gives its items to their player class. Turn off what they already do: `hh_weapon_switching 0` (their own weapon slots), `hh_kick 0` (their own melee), and the HUD's ammo setting to "Horde Hammer weapons" or "Never". Their monsters replace Doom's, so `HH_VariedZombie` spawns theirs.
+Horde Hammer draws its HUD over theirs and gives its items to their player class. Turn off what they already do: `hh_weapon_switching 0` (their own weapon slots), `hh_kick_enabled 0` (their own melee), and the HUD's ammo setting to "Horde Hammer weapons" or "Never". Their monsters replace Doom's, so `HH_VariedZombie` spawns theirs.
 
 ## Multiplayer
 

@@ -49,6 +49,19 @@ class HHTest_Handler : EventHandler {
             Console.Printf("test: last stand pistol %s, rifle rank %d", choice != null? choice.GetClassName(): 'none', rifle != null? rifle.lastStand: -1);
             let selected = player.A_SelectWeapon('HHTest_Rifle');
             Console.Printf("test: select rifle %d pending %s", selected, player.player.PendingWeapon != null && player.player.PendingWeapon != WP_NOCHANGE? player.player.PendingWeapon.GetClassName(): 'none');
+        } else if (e.Name == 'hhtest_mag') {
+            let weapon = HH_Weapon(player.player.ReadyWeapon);
+            if (weapon != null) {
+                let state = player.player.FindPSprite(PSP_WEAPON);
+                Console.Printf("test: %s magazine %d reserve %d state %s", weapon.GetClassName(), weapon.activeAmmo,
+                    weapon.ammoType1 != null? player.CountInv(weapon.ammoType1): -1, state != null && state.CurState != null? String.Format("%d", weapon.InStateSequence(state.CurState, weapon.FindState("Reload"))): "?");
+            }
+        } else if (e.Name == 'hhtest_zombies') {
+            String kinds = "";
+            foreach (zombie : HH_Spawning.Get().zombies) {
+                kinds = kinds..zombie.GetClassName().." ";
+            }
+            Console.Printf("test: zombies %s", kinds);
         } else if (e.Name == 'hhtest_repulse_wait') {
             Console.Printf("phase %d", HH_Rounds.Get().phase);
         }
