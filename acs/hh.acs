@@ -25,6 +25,8 @@ function bool HH_TakePoints(int player, int amount) { return ScriptCall("HH_Acs"
 function bool HH_IsActive(int player) { return ScriptCall("HH_Acs", "IsActive", player); }
 function bool HH_IsDown(int player) { return ScriptCall("HH_Acs", "IsDown", player); }
 function bool HH_IsSpectating(int player) { return ScriptCall("HH_Acs", "IsSpectating", player); }
+function void HH_MoveToSpawn(int player) { ScriptCall("HH_Acs", "MoveToSpawn", player); }
+function void HH_MoveAllToSpawn(void) { ScriptCall("HH_Acs", "MoveAllToSpawn"); }
 function void HH_RevivePlayer(int player) { ScriptCall("HH_Acs", "RevivePlayer", player); }
 function bool HH_GivePerk(int player, str perk) { return ScriptCall("HH_Acs", "GivePerk", player, perk); }
 function void HH_MoveBox(void) { ScriptCall("HH_Acs", "MoveBox"); }

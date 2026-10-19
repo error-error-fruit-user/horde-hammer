@@ -22,6 +22,7 @@
 //   powerup_taken     player, the drop's event id (1 Insta-Kill, 2 Double Points, 3 Max Ammo,
 //                     4 Ka-Boom, 5 Fire Sale, a game's own drops their own)
 //   zone_opened       zone
+//   repulse_pressed   player (whenever the repulse key is pressed, repulsion or not)
 
 class HH_Listener {
     Name event;

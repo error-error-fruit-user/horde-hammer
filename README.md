@@ -111,7 +111,7 @@ Everything a player sees or hears can be replaced without touching the library:
 
 ### Map scripts and events
 
-Map scripts call the library through `ScriptCall("HH_Acs", ...)`; `acs/hh.acs` wraps every call (`HH_CurrentRound()`, `HH_GivePoints(player, amount)`, `HH_OpenZone(zone)`, `HH_StartGame()`...). They also get events: `HH_Listen("round_started", "MyScript")` runs `MyScript` with the round as its argument whenever a round starts. The same events reach ZScript as interface events named `hh_<event>`. The events and their numbers are listed at the top of `hh/zscript/hh/events.zs`: game started, round started and ended, game over, player downed, revived, bled out and respawned, door opened, perk bought, box opened and moved, power-up taken, zone opened.
+Map scripts call the library through `ScriptCall("HH_Acs", ...)`; `acs/hh.acs` wraps every call (`HH_CurrentRound()`, `HH_GivePoints(player, amount)`, `HH_OpenZone(zone)`, `HH_StartGame()`...). They also get events: `HH_Listen("round_started", "MyScript")` runs `MyScript` with the round as its argument whenever a round starts. The same events reach ZScript as interface events named `hh_<event>`. The events and their numbers are listed at the top of `hh/zscript/hh/events.zs`: game started, round started and ended, game over, player downed, revived, bled out and respawned, door opened, perk bought, box opened and moved, power-up taken, zone opened, and the repulse key pressed (at any time, so a game can use it too).
 
 ### With Brutal Doom or Project Brutality
 

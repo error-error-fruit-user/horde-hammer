@@ -122,6 +122,21 @@ class HH_Acs play {
         return manager != null && manager.spectating;
     }
 
+    // Puts a player at their respawn spot (or a player start), like a game's intro ending
+    static void MoveToSpawn(int player) {
+        if (HH_Util.InGame(player)) {
+            HH_Players.MoveToSpawn(players[player].mo);
+        }
+    }
+
+    static void MoveAllToSpawn() {
+        for (let i = 0; i < MAXPLAYERS; ++i) {
+            if (HH_Util.InGame(i)) {
+                HH_Players.MoveToSpawn(players[i].mo);
+            }
+        }
+    }
+
     static void RevivePlayer(int player) {
         if (HH_Util.InGame(player)) {
             let lastStand = HH_LastStand(players[player].mo.FindInventory('HH_LastStand'));
