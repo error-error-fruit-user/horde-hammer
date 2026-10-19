@@ -46,7 +46,7 @@ class HH_Zombie : Actor {
         POSS AB 10 A_Look;
         Loop;
     See:
-        POSS AABBCCDD 3 A_Chase(null, "Melee");
+        POSS AABBCCDD 3 A_Chase;     // into Melee when next to its target (it has no Missile)
         Loop;
     Melee:
         POSS E 6 A_FaceTarget;
