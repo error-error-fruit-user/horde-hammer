@@ -10,7 +10,7 @@ It was extracted from [Nacht des Schreckens](https://github.com/error-error-frui
 
 ## Requirements
 
-UZDoom 5.0 or newer (the library's ZScript is version 5.0.0). GZDoom and older ports are not supported. Doom 2 or Freedoom as the IWAD.
+UZDoom 5.0 or newer (the library's ZScript is version 5.0.0). Doom 2 or Freedoom as the IWAD.
 
 ## Loading it
 
