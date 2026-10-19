@@ -45,6 +45,47 @@ class HH_InventoryManager : Inventory {
         return GetDefaultByType(type).ammoType1 != null;
     }
 
+    // The weapon the player holds that is `type` as far as they can tell: that class, one derived
+    // from it or one it derives from (Brutal Doom's purist versions), or its upgrade or what it
+    // upgrades; null when there is none
+    static Weapon Held(Actor player, class<Weapon> type) {
+        if (player == null || type == null) {
+            return null;
+        }
+        let upgrade = HH_InventoryManager.UpgradeOf(type);
+        for (let item = player.Inv; item != null; item = item.Inv) {
+            let weapon = Weapon(item);
+            if (weapon == null) {
+                continue;
+            }
+            let held = weapon.GetClass();
+            if (HH_InventoryManager.Related(held, type) || held == upgrade || HH_InventoryManager.UpgradeOf(held) == type) {
+                return weapon;
+            }
+        }
+        return null;
+    }
+
+    static class<Weapon> UpgradeOf(class<Weapon> type) {
+        let zombiesWeapon = (class<HH_Weapon>)(type);
+        return zombiesWeapon != null? GetDefaultByType(zombiesWeapon).upgrade: null;
+    }
+
+    // One class is the other or derives from it
+    static bool Related(class<Weapon> one, class<Weapon> other) {
+        for (Class<Object> parent = one; parent != null; parent = parent.GetParentClass()) {
+            if (parent == other) {
+                return true;
+            }
+        }
+        for (Class<Object> parent = other; parent != null; parent = parent.GetParentClass()) {
+            if (parent == one) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     clearscope bool IsActive() const {
         return self.owner != null && self.owner.health > 0 && !self.lastStand && !self.spectating && !self.gameOver;
     }

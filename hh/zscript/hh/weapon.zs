@@ -159,7 +159,8 @@ class HH_Weapon : Weapon {
 // The weapons the mystery box can give: the ones in the player's weapon slots (their class's
 // Player.WeaponSlot, and any weapon's own Weapon.SlotNumber), so every player class, a mod's
 // included, gets its own roster. An HH_Weapon comes as often as its box weight (never at 0); any
-// other weapon but melee at 1.
+// other weapon but melee at 1, unless it is CHEATNOTWEAPON (a mod's variant of another, like Brutal
+// Doom's purist and dual ones).
 class HH_WeaponPool play {
     static void Gather(PlayerPawn player, out Array<class<Weapon> > weapons, out Array<int> weights) {
         weapons.Clear();
@@ -179,7 +180,8 @@ class HH_WeaponPool play {
                 let zombiesWeapon = (class<HH_Weapon>)(type);
                 if (zombiesWeapon != null) {
                     weight = GetDefaultByType(zombiesWeapon).boxWeight;
-                } else if (HH_InventoryManager.Counts(type) && (manager == null || type != manager.melee)) {
+                } else if (HH_InventoryManager.Counts(type) && (manager == null || type != manager.melee)
+                        && !GetDefaultByType(type).bCheatNotWeapon) {
                     weight = 1;
                 }
                 if (weight > 0) {
@@ -190,15 +192,15 @@ class HH_WeaponPool play {
         }
     }
 
-    // A weighted pick among the weapons the player doesn't hold, other than `except`; null when
-    // there is nothing left to give
+    // A weighted pick among the weapons the player doesn't hold (HH_InventoryManager.Held), other
+    // than `except`; null when there is nothing left to give
     static class<Weapon> Choose(PlayerPawn player, class<Weapon> except = null) {
         Array<class<Weapon> > weapons;
         Array<int> weights;
         HH_WeaponPool.Gather(player, weapons, weights);
         let total = 0;
         for (let i = 0; i < weapons.Size(); ++i) {
-            if (weapons[i] == except || (player != null && player.FindInventory(weapons[i]) != null)) {
+            if (weapons[i] == except || (player != null && HH_InventoryManager.Held(player, weapons[i]) != null)) {
                 weights[i] = 0;
             }
             total += weights[i];

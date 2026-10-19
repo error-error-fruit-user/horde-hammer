@@ -35,7 +35,14 @@ class HH_Pickup : HH_Interactable {
     }
 
     bool CanTake(PlayerPawn player, HH_InventoryManager manager) {
-        return self.item != null && player.FindInventory(self.item) == null;
+        if (self.item == null) {
+            return false;
+        }
+        let weaponType = (class<Weapon>)(self.item);
+        if (weaponType != null) {
+            return HH_InventoryManager.Held(player, weaponType) == null;
+        }
+        return player.FindInventory(self.item) == null;
     }
 
     override void DoTouch(PlayerPawn player, HH_InventoryManager manager) {

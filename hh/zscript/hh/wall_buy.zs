@@ -22,20 +22,18 @@ class HH_WallBuy : HH_Interactable {
 
     // The upgraded version of the weapon, if the game has one (HH_Weapon.Upgrade)
     class<Weapon> UpgradedWeapon() {
-        let zombiesWeapon = (class<HH_Weapon>)(self.weaponType);
-        return zombiesWeapon != null? GetDefaultByType(zombiesWeapon).upgrade: null;
+        return HH_InventoryManager.UpgradeOf(self.weaponType);
     }
 
-    // Which of the two the player holds, or null
+    // The version of it the player holds (HH_InventoryManager.Held), or null
     class<Weapon> HeldVersion(Actor player) {
-        if (self.weaponType != null && player.FindInventory(self.weaponType) != null) {
-            return self.weaponType;
-        }
+        let held = HH_InventoryManager.Held(player, self.weaponType);
+        return held != null? held.GetClass(): null;
+    }
+
+    int HeldAmmoCost(class<Weapon> held) {
         let upgraded = self.UpgradedWeapon();
-        if (upgraded != null && player.FindInventory(upgraded) != null) {
-            return upgraded;
-        }
-        return null;
+        return upgraded != null && held == upgraded? HH_Settings.Int("hh_wall_upgraded_ammo_cost"): self.AmmoCost();
     }
 
     static bool AmmoIsFull(Actor player, class<Weapon> type) {
@@ -55,7 +53,7 @@ class HH_WallBuy : HH_Interactable {
         if (held == null) {
             HH_Interactable.HintCost(manager, self.cost);
         } else if (!HH_WallBuy.AmmoIsFull(player, held)) {
-            HH_Interactable.HintCost(manager, held == self.weaponType? self.AmmoCost(): HH_Settings.Int("hh_wall_upgraded_ammo_cost"));
+            HH_Interactable.HintCost(manager, self.HeldAmmoCost(held));
         }
     }
 
@@ -66,7 +64,7 @@ class HH_WallBuy : HH_Interactable {
         let held = self.HeldVersion(player);
         if (held != null) {
             // Ammo, charged only when there is room for it
-            let price = held == self.weaponType? self.AmmoCost(): HH_Settings.Int("hh_wall_upgraded_ammo_cost");
+            let price = self.HeldAmmoCost(held);
             if (HH_WallBuy.AmmoIsFull(player, held) || !HH_Points.Take(player, price)) {
                 player.A_StartSound("hh/denied", CHAN_AUTO);
                 return false;
