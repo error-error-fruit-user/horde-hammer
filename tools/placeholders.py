@@ -165,7 +165,7 @@ def main():
         kick.rect(30, top, 30, 80 - top, (70, 70, 60, 255))
         kick.rect(20, top, 60, 18, (40, 30, 20, 255))
         kick.frame(20, top, 60, 18, BLACK)
-        first_person(f"sprites/hh/kick/hhkk{frame}0.png", kick, 180)
+        first_person(f"sprites/hh/kick/hhkk{frame}0.png", kick, 50)
 
     # HUD pictures (no offsets)
     for name, color, label in [("hhiqr", (40, 90, 220, 255), "QR"), ("hhijg", (200, 30, 30, 255), "JG"),

@@ -195,7 +195,7 @@ class HH_Input : EventHandler {
             }
             // Always told, so a game can use the key for itself too (nacht skips its intro with it)
             HH_Events.Fire('repulse_pressed', e.Player);
-        } else if (e.Name == 'HH_Settings.Bool("hh_kick_enabled")') {
+        } else if (e.Name == 'hh_kick') {
             let kick = HH_KickItem(pawn.FindInventory('HH_KickItem'));
             if (HH_Settings.Bool("hh_kick_enabled") && kick != null && manager.IsActive()) {
                 kick.Kick();
