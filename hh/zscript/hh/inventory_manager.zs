@@ -123,7 +123,8 @@ class HH_InventoryManager : Inventory {
             }
             if (HH_InventoryManager.Counts(weapon.GetClass())) {
                 self.weapons.Push(weapon);
-            } else if (self.melee == null) {
+            } else if (self.melee == null && weapon.ammoType1 == null) {
+                // equipment the player starts with (grenades) has ammo, and isn't melee
                 self.melee = weapon.GetClass();
             }
         }

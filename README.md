@@ -75,7 +75,7 @@ class MyMap_Defaults : HH_Defaults {
 | Drop weapon, twice | Drop the weapon in hand (costs `hh_drop_weapon_cost`) |
 | 1, 2, ..., 0 | The first carried weapon, the second..., 0 for melee |
 
-The kick and repulse keys are network events (in the controls menu under "Horde Hammer"), not `+user` buttons, so they don't clash with mods that use those.
+The kick and repulse keys are network events (in the controls menu under "Horde Hammer"), not `+user` buttons, so they don't clash with mods that use those. A game can replace the kick with its own (a knife bought off the wall): give the player a subclass of `HH_KickItem` with its own `Kick` state, and take the plain one away. Melee (the 0 key) is the first weapon without ammo the player starts with, so equipment they start with, like grenades, isn't taken for it.
 
 ### Controllers
 
