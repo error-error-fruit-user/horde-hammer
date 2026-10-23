@@ -159,21 +159,6 @@ def main():
         drink.rect(18, top + 16, 28, 96 - top - 16, (120, 200, 255, 255))
         drink.frame(18, top + 16, 28, 96 - top - 16, BLACK)
         first_person(f"sprites/hh/perks/hhdk{frame}0.png", drink, 128)
-    # The key: a pickup, and in hand held still, drawn back and thrust
-    key = Picture(24, 10)
-    brass = (210, 170, 60, 255)
-    key.frame(0, 0, 10, 10, brass, 3)
-    key.rect(10, 4, 14, 2, brass)
-    key.rect(18, 6, 2, 4, brass)
-    key.rect(22, 6, 2, 3, brass)
-    thing("sprites/hh/key/hhkya0.png", key)
-    for frame, (left, bottom) in zip("abc", [(170, 0), (176, 8), (150, -14)]):
-        held = Picture(40, 64 + bottom)
-        held.rect(0, 30, 40, 34 + bottom, (70, 60, 50, 255))
-        held.frame(0, 30, 40, 34 + bottom, BLACK)
-        held.frame(12, 0, 14, 14, brass, 4)
-        held.rect(17, 14, 4, 20, brass)
-        first_person(f"sprites/hh/key/hhkh{frame}0.png", held, left)
     for index, frame in enumerate("abcd"):
         kick = Picture(96, 80)
         top = 60 - index * 18

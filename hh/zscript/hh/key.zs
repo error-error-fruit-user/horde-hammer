@@ -1,6 +1,7 @@
 // A key: equipment that opens the doors it is made for when swung at them, for nothing, and is
 // gone after; swung at anything else it hits like a knife. A game subclasses it for each door (or
-// set of doors) with HH_Key.Door, their TID, and its own sprites.
+// set of doors) with HH_Key.Door, their TID. It is the IWAD's blue keycard, held up in hand; a
+// subclass can be another key (RKEY, YSKU...) by replacing its states.
 
 class HH_Key : HH_Weapon {
     const RANGE = 72;
@@ -51,24 +52,30 @@ class HH_Key : HH_Weapon {
         self.TakeInventory(invoker.GetClass(), 1);
     }
 
+    // The keycard is held up at the bottom of the screen (its own offsets are a pickup's)
     States {
     Spawn:
-        HHKY A -1;
-        Stop;
+        BKEY A 10;
+        BKEY B 10 Bright;
+        Loop;
     Select:
-        HHKH A 1 A_Raise;
-        Loop;
+        BKEY A 1 Offset(150, 150) A_Raise(256);
+        Wait;
     Deselect:
-        HHKH A 1 A_Lower;
-        Loop;
+        BKEY A 1 Offset(150, 150) A_Lower(256);
+        Wait;
     Ready:
-        HHKH A 1 A_WeaponReady;
+        // A_WeaponReady puts the weapon back at 0, WEAPONTOP to bob it: held up again after
+        BKEY A 1 {
+            A_WeaponReady();
+            A_WeaponOffset(150, 150);
+        }
         Loop;
     Fire:
-        HHKH B 3;
-        HHKH C 3 HH_KeySwing;
-        HHKH C 4;
-        HHKH B 3;
+        BKEY A 3 Offset(150, 158);
+        BKEY B 3 Bright Offset(150, 130) HH_KeySwing;
+        BKEY B 4 Bright Offset(150, 130);
+        BKEY A 3 Offset(150, 154);
         TNT1 A 0 WhenSpent("Spent");
         Goto Ready;
     Spent:
