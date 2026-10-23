@@ -43,6 +43,11 @@ class HH_Defaults play {
         settings.Set("hh_zombie_count_per_player", "0");  // added each round for every player after the first
         settings.Set("hh_zombie_speed_per_round", "0");  // added to zombie speed each round
         settings.Set("hh_zombie_speed_max", "0");  // the most speed rounds can give, 0 for no limit
+        settings.Set("hh_zombie_slow_speed", "0.65");  // a slow zombie's speed against its own
+        settings.Set("hh_zombie_slow_chance", "25");  // percent of zombies that are slow
+        settings.Set("hh_zombie_fast_speed", "1.8");  // a fast zombie's speed against its own
+        settings.Set("hh_zombie_fast_per_round", "6");  // percent more of them fast each round after the first
+        settings.Set("hh_zombie_fast_max", "70");  // the most percent of them fast
         settings.Set("hh_max_horde", "32");  // zombies alive at once
         settings.Set("hh_spawn_delay_min", "30");  // tics between spawns
         settings.Set("hh_spawn_delay_max", "70");

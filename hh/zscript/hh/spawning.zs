@@ -139,12 +139,27 @@ class HH_Spawning : EventHandler {
         return true;
     }
 
+    // How fast a new zombie is, against its own speed: fast ones (more of them every round, up to
+    // hh_zombie_fast_max percent), slow ones (hh_zombie_slow_chance percent), the rest as they are,
+    // each a little faster or slower than the next
+    static double Pace(int round) {
+        let fast = min(HH_Settings.Int("hh_zombie_fast_per_round") * max(0, round - 1), HH_Settings.Int("hh_zombie_fast_max"));
+        let roll = Random[HH_Spawn](1, 100);
+        let pace = 1.0;
+        if (roll <= fast) {
+            pace = HH_Settings.Float("hh_zombie_fast_speed");
+        } else if (roll <= fast + HH_Settings.Int("hh_zombie_slow_chance")) {
+            pace = HH_Settings.Float("hh_zombie_slow_speed");
+        }
+        return pace * FRandom[HH_Spawn](0.9, 1.1);
+    }
+
     void Adopt(Actor zombie) {
         let rounds = HH_Rounds.Get();
         if (rounds != null) {
             zombie.StartHealth = rounds.zombieHealth;
             zombie.health = rounds.zombieHealth;
-            zombie.speed += rounds.zombieSpeedBonus;
+            zombie.speed = (zombie.speed + rounds.zombieSpeedBonus) * HH_Spawning.Pace(rounds.currentRound);
         }
         zombie.bDropOff = true;
         self.zombies.Push(zombie);
