@@ -138,6 +138,7 @@ class HH_InventoryManager : Inventory {
                 self.equipment.Delete(i);
             }
         }
+        self.PutAwayEmpty();
         let ready = self.owner.player != null? self.owner.player.ReadyWeapon: null;
         if (ready != null && self.equipment.Find(ready) != self.equipment.Size()) {
             self.lastEquipment = ready.GetClass();
@@ -193,15 +194,14 @@ class HH_InventoryManager : Inventory {
         let weapon = Weapon(item);
         if (weapon != null && self.scanned && !self.lastStand && self.owner.FindInventory(weapon.GetClass()) == null
                 && HH_InventoryManager.IsEquipment(weapon.GetClass())) {
-            // a fourth piece of equipment takes the place of the one in hand, or the newest
+            // one too many takes the place of the one in hand, else the one held last, else the newest
             if (self.equipment.Size() >= max(1, HH_Settings.Int("hh_max_equipment"))) {
                 let ready = self.owner.player.ReadyWeapon;
-                let replaced = self.equipment.Find(ready) != self.equipment.Size()? ready: self.equipment[self.equipment.Size() - 1];
-                self.Abandon(replaced);
-                if (replaced.ammoType1 != null) {
-                    self.owner.SetInventory(replaced.ammoType1, 0);
-                }
-                replaced.Destroy();
+                let last = self.lastEquipment != null? Weapon(self.owner.FindInventory(self.lastEquipment)): null;
+                let replaced = self.equipment.Find(ready) != self.equipment.Size()? ready
+                    : self.equipment.Find(last) != self.equipment.Size()? last
+                    : self.equipment[self.equipment.Size() - 1];
+                self.TradeIn(replaced);
             }
             self.equipment.Push(weapon);
         } else if (weapon != null && self.scanned && !self.lastStand && self.owner.FindInventory(weapon.GetClass()) == null
@@ -224,19 +224,35 @@ class HH_InventoryManager : Inventory {
     }
 
     // Throws away the weapon in hand (or the one coming up) to make room for a new one
+    // (the one in hand, else the one coming up, else the one held last, else the newest)
     void DropCurrent() {
         let current = self.owner.player.ReadyWeapon;
         if (current == null || !self.Owns(current)) {
             current = self.owner.player.PendingWeapon;
         }
+        if ((current == null || current == WP_NOCHANGE || !self.Owns(current)) && self.lastWeapon != null) {
+            current = Weapon(self.owner.FindInventory(self.lastWeapon));
+        }
         if (current == null || current == WP_NOCHANGE || !self.Owns(current)) {
             current = self.weapons[self.weapons.Size() - 1];
         }
-        self.Abandon(current);
-        if (current.ammoType1 != null) {
-            self.owner.SetInventory(current.ammoType1, 0);
+        self.TradeIn(current);
+    }
+
+    // Gives up a weapon or piece of equipment for good, and its ammo unless another uses it
+    void TradeIn(Weapon traded) {
+        self.Abandon(traded);
+        let ammo = traded.ammoType1;
+        let shared = false;
+        for (let item = self.owner.Inv; item != null && ammo != null; item = item.Inv) {
+            if (item != traded && Weapon(item) != null && Weapon(item).ammoType1 == ammo) {
+                shared = true;
+            }
         }
-        current.Destroy();
+        if (ammo != null && !shared) {
+            self.owner.SetInventory(ammo, 0);
+        }
+        traded.Destroy();
     }
 
     override void ModifyDamage(int damage, Name damageType, out int newDamage, bool passive, Actor inflictor, Actor source, int flags) {
@@ -357,6 +373,28 @@ class HH_InventoryManager : Inventory {
     bool InEquipment() {
         let ready = self.owner.player != null? self.owner.player.ReadyWeapon: null;
         return ready != null && self.equipment.Find(ready) != self.equipment.Size();
+    }
+
+    // Equipment used up is kept, but out of sight: out of hand once its throw is over (the next
+    // usable piece, or back to the weapons); the equipment keys skip it until it has ammo again
+    void PutAwayEmpty() {
+        if (self.owner.player == null) {
+            return;
+        }
+        let player = self.owner.player;
+        let piece = player.ReadyWeapon;
+        if (piece != null && self.equipment.Find(piece) != self.equipment.Size() && !self.Usable(piece)
+                && (player.WeaponState & WF_WEAPONREADY)) {
+            self.CycleEquipment(1);
+            if (player.PendingWeapon == WP_NOCHANGE || player.PendingWeapon == null || player.PendingWeapon == piece) {
+                let back = self.lastWeapon != null? Weapon(self.owner.FindInventory(self.lastWeapon)): null;
+                if (back != null) {
+                    self.owner.A_SelectWeapon(back.GetClass());
+                } else {
+                    self.SelectBest();
+                }
+            }
+        }
     }
 
     // Whether a weapon has anything to fire: no ammo type, its reserve, or its magazine
