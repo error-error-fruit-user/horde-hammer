@@ -9,6 +9,7 @@
 class HH_MysteryBox : HH_Interactable {
     const KNOCK_MOST = 14.0;    // the fastest a hit sends it, in map units per tic
     const SPIN_DECAY = 0.9;     // what is left of its turning each tic
+    const MELEE_REACH = 128;    // how close a melee weapon's hit lands to count as one
 
     HH_MysteryBoxLocation location;
     bool shouldFade;
@@ -107,10 +108,8 @@ class HH_MysteryBox : HH_Interactable {
     override int DamageMobj(Actor inflictor, Actor source, int damage, Name mod, int flags, double angle) {
         let player = PlayerPawn(source);
         let at = inflictor != null? inflictor.pos: source != null? source.pos: self.pos;
-        if (mod == 'HH_Kick') {
-            if (player != null) {
-                self.Kicked(player);
-            }
+        if (player != null && HH_MysteryBox.IsMelee(player, inflictor, mod)) {
+            self.Kicked(player);
             return 0;
         }
         if (player != null && player.player != null && !(flags & DMG_EXPLOSION)) {
@@ -125,6 +124,21 @@ class HH_MysteryBox : HH_Interactable {
             HH_MysteryBox.Knock(self, at, damage);
         }
         return 0;
+    }
+
+    // Whether a hit is melee: the kick, any weapon's melee damage (the fist, the chainsaw, knives),
+    // a mod's own kick or punch, or a close hit from a melee weapon in hand
+    static bool IsMelee(PlayerPawn player, Actor inflictor, Name mod) {
+        if (inflictor != null && inflictor.bMissile) {
+            return false;
+        }
+        String kind = mod;
+        kind = kind.MakeLower();
+        if (kind.IndexOf("kick") >= 0 || kind.IndexOf("melee") >= 0 || kind.IndexOf("punch") >= 0 || kind.IndexOf("fist") >= 0) {
+            return true;
+        }
+        let weapon = player.player != null? player.player.ReadyWeapon: null;
+        return weapon != null && weapon.bMeleeWeapon && (inflictor == null || player.Distance2D(inflictor) <= HH_MysteryBox.MELEE_REACH);
     }
 
     // Which side of the box a point is on, as the box faces: below 0 its left, above its right
