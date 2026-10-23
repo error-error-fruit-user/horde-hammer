@@ -2,6 +2,8 @@
 
 class HH_Pickup : HH_Interactable {
     class<Inventory> item;
+    int ammoCarried;            // the reserve ammo that comes with a dropped weapon
+    bool fullAmmo;              // the box's: taken with a full reserve
 
     Default {
         Radius 20;
@@ -18,19 +20,27 @@ class HH_Pickup : HH_Interactable {
         return unknown.SpawnState.sprite, unknown.SpawnState.frame, unknown.scale;
     }
 
-    // A pickup holding `given` (and the giver's ammo for it), where the giver stands
+    // A pickup holding `given`, where the giver stands, with its share of the giver's ammo: the
+    // reserve split evenly between every weapon they hold that uses it
     static HH_Pickup TakeFrom(Actor giver, Weapon given) {
+        let ammo = given.ammoType1;
+        let share = 0;
+        if (ammo != null) {
+            let sharing = 0;
+            for (let item = giver.Inv; item != null; item = item.Inv) {
+                let weapon = Weapon(item);
+                if (weapon != null && weapon.ammoType1 == ammo) {
+                    ++sharing;
+                }
+            }
+            share = giver.CountInv(ammo) / max(1, sharing);
+            giver.TakeInventory(ammo, share);
+        }
         let pickup = HH_Pickup(Actor.Spawn('HH_Pickup', giver.pos, ALLOW_REPLACE));
         pickup.item = given.GetClass();
         pickup.AddInventory(given);
+        pickup.ammoCarried = share;
         [pickup.sprite, pickup.frame, pickup.scale] = HH_Pickup.GetInfo(given);
-        let ammo = given.Default.ammoType1;
-        if (ammo != null) {
-            let owned = giver.FindInventory(ammo);
-            if (owned != null) {
-                pickup.AddInventory(owned);
-            }
-        }
         return pickup;
     }
 
@@ -59,6 +69,7 @@ class HH_Pickup : HH_Interactable {
         return true;
     }
 
+    // The taker gets the weapon (HH_InventoryManager brings it up, if it has ammo)
     virtual void GiveTo(PlayerPawn taker, HH_InventoryManager manager) {
         let weaponType = (class<Weapon>)(self.item);
         let taken = Weapon(self.FindInventory(self.item));
@@ -67,12 +78,8 @@ class HH_Pickup : HH_Interactable {
             // The weapon itself, with its magazine and the ammo that came with it
             manager.HandlePickup(taken);
             taker.AddInventory(taken);
-            if (ammo != null) {
-                let carried = self.FindInventory(ammo);
-                if (carried != null) {
-                    taker.GiveInventory(ammo, carried.amount);
-                    carried.Destroy();
-                }
+            if (ammo != null && self.ammoCarried > 0) {
+                taker.GiveInventory(ammo, self.ammoCarried);
             }
         } else {
             taker.GiveInventory(self.item, 1);
@@ -80,8 +87,9 @@ class HH_Pickup : HH_Interactable {
                 taker.GiveInventory(ammo, GetDefaultByType(ammo).MaxAmount / 3);
             }
         }
-        if (weaponType != null) {
-            taker.A_SelectWeapon(weaponType);
+        if (self.fullAmmo && weaponType != null) {
+            manager.FillAmmo(ammo);
+            manager.FillAmmo(GetDefaultByType(weaponType).ammoType2);
         }
         self.Destroy();
     }

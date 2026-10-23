@@ -425,6 +425,7 @@ class HH_MysteryBoxPickup : HH_Pickup {
         pickup.box = box;
         pickup.angle = box.angle;
         pickup.ticsLeft = HH_Settings.Int("hh_box_pickup_time");
+        pickup.fullAmmo = true;
         [pickup.sprite, pickup.frame, pickup.scale] = HH_Pickup.GetInfo(GetDefaultByType(item));
         pickup.particles = Actor.Spawn('BlackParticleFountain', (box.pos.xy, box.floorz), ALLOW_REPLACE);
         return pickup;
@@ -452,6 +453,7 @@ class HH_MysteryBoxPickup : HH_Pickup {
         let dropped = HH_Pickup(Actor.Spawn('HH_Pickup', self.pos, ALLOW_REPLACE));
         if (dropped != null) {
             dropped.item = self.item;
+            dropped.fullAmmo = true;
             dropped.angle = self.angle;
             [dropped.sprite, dropped.frame, dropped.scale] = HH_Pickup.GetInfo(GetDefaultByType(self.item));
             dropped.vel = (Actor.AngleToVector(self.angle, 3), 3);

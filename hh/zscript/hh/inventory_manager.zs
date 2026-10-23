@@ -12,6 +12,7 @@ class HH_InventoryManager : Inventory {
     Array<Weapon> equipment;            // equipment (hh_max_equipment), in the order it came
     class<Weapon> lastWeapon, lastEquipment;    // what the equipment key goes back to
     int risenRound;                     // the round this player last rose (HH_Risen)
+    class<Weapon> given;                // a weapon just given, brought up on the next tic
     class<Weapon> melee, startingWeapon;
     bool scanned;                       // weapons and melee found after the player got their items
     bool skipPickup;                    // giving a weapon that shouldn't count (last stand)
@@ -122,6 +123,13 @@ class HH_InventoryManager : Inventory {
             return;
         }
         ++self.ticsSinceSwitch;
+        if (self.given != null) {
+            let held = Weapon(self.owner.FindInventory(self.given));
+            self.given = null;
+            if (held != null && self.IsActive() && self.switchWeapon && self.HasAmmo(held)) {
+                self.owner.A_SelectWeapon(held.GetClass());
+            }
+        }
         if (!self.scanned && self.owner.player != null && self.owner.player.ReadyWeapon != null) {
             self.Scan();
         }
@@ -170,6 +178,10 @@ class HH_InventoryManager : Inventory {
     override bool HandlePickup(Inventory item) {
         if (self.skipPickup) {
             return super.HandlePickup(item);
+        }
+        // a weapon or equipment given comes up (its weapons or its equipment), once it is in hand
+        if (Weapon(item) != null && !(item is 'HH_Drink') && self.scanned && !self.lastStand) {
+            self.given = Weapon(item).GetClass();
         }
         let drink = HH_Drink(item);
         if (drink != null) {
@@ -345,6 +357,15 @@ class HH_InventoryManager : Inventory {
     bool InEquipment() {
         let ready = self.owner.player != null? self.owner.player.ReadyWeapon: null;
         return ready != null && self.equipment.Find(ready) != self.equipment.Size();
+    }
+
+    // Whether a weapon has anything to fire: no ammo type, its reserve, or its magazine
+    bool HasAmmo(Weapon weapon) {
+        if (weapon.ammoType1 == null || self.owner.CountInv(weapon.ammoType1) > 0) {
+            return true;
+        }
+        let zombiesWeapon = HH_Weapon(weapon);
+        return zombiesWeapon != null && zombiesWeapon.activeAmmo > 0;
     }
 
     // Equipment that can come up: thrown things need something left to throw
