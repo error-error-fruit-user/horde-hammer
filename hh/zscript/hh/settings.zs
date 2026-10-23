@@ -16,7 +16,8 @@ class HH_Defaults play {
     virtual void Fill(HH_SettingsHandler settings) {
         settings.Set("hh_start_points", "500");  // points a player starts with
         settings.Set("hh_respawn_points", "1500");  // the least a player has after respawning at a new round
-        settings.Set("hh_max_weapons", "2");  // weapons a player can carry, not counting melee and drinks
+        settings.Set("hh_max_weapons", "2");  // weapons a player can carry, not counting melee, drinks and equipment
+        settings.Set("hh_max_equipment", "3");  // pieces of equipment a player can carry
         settings.Set("hh_perk_limit", "0");  // perks a player can hold at once, 0 for no limit
         settings.Set("hh_player_speed", "0");  // player speed, 0 to leave the player class's own
         settings.Set("hh_health", "150");  // health without Juggernog
@@ -73,6 +74,8 @@ class HH_Defaults play {
         settings.Set("hh_bleed_out_time", "1050");  // tics a downed player waits for a revive
         settings.Set("hh_revive_time", "175");  // tics to revive someone
         settings.Set("hh_quick_revive_time", "105");  // with Quick Revive
+        settings.Set("hh_risen_time", "1050");
+        settings.Set("hh_risen_rounds", "3");
         settings.Set("hh_solo_last_stand_time", "350");  // tics before solo Quick Revive brings the player back
         settings.Set("hh_solo_revives", "3");  // solo Quick Revive can be bought this many times
         settings.Set("hh_solo_quick_revive_cost", "500");

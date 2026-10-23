@@ -142,7 +142,7 @@ def main():
     thing("sprites/hh/perks/hhbta0.png", bottle)
     for name, color, label in [("hhik", (180, 20, 20, 255), "IK"), ("hhdp", (230, 190, 30, 255), "X2"),
                                ("hhma", (40, 150, 40, 255), "MA"), ("hhnk", (60, 60, 60, 255), "NK"),
-                               ("hhfs", (240, 100, 20, 255), "FS")]:
+                               ("hhfs", (240, 100, 20, 255), "FS"), ("hhrn", (110, 20, 30, 255), "RN")]:
         thing(f"sprites/hh/drops/{name}a0.png", box(24, 24, color, label))
     # Editor-only markers (invisible in the game)
     for name, color, label in [("hhsp", (200, 40, 40, 255), "Z"), ("hhbl", (90, 60, 30, 255), "B"),
@@ -159,6 +159,21 @@ def main():
         drink.rect(18, top + 16, 28, 96 - top - 16, (120, 200, 255, 255))
         drink.frame(18, top + 16, 28, 96 - top - 16, BLACK)
         first_person(f"sprites/hh/perks/hhdk{frame}0.png", drink, 128)
+    # The key: a pickup, and in hand held still, drawn back and thrust
+    key = Picture(24, 10)
+    brass = (210, 170, 60, 255)
+    key.frame(0, 0, 10, 10, brass, 3)
+    key.rect(10, 4, 14, 2, brass)
+    key.rect(18, 6, 2, 4, brass)
+    key.rect(22, 6, 2, 3, brass)
+    thing("sprites/hh/key/hhkya0.png", key)
+    for frame, (left, bottom) in zip("abc", [(170, 0), (176, 8), (150, -14)]):
+        held = Picture(40, 64 + bottom)
+        held.rect(0, 30, 40, 34 + bottom, (70, 60, 50, 255))
+        held.frame(0, 30, 40, 34 + bottom, BLACK)
+        held.frame(12, 0, 14, 14, brass, 4)
+        held.rect(17, 14, 4, 20, brass)
+        first_person(f"sprites/hh/key/hhkh{frame}0.png", held, left)
     for index, frame in enumerate("abcd"):
         kick = Picture(96, 80)
         top = 60 - index * 18
@@ -171,7 +186,7 @@ def main():
     for name, color, label in [("hhiqr", (40, 90, 220, 255), "QR"), ("hhijg", (200, 30, 30, 255), "JG"),
                                ("hhisc", (30, 160, 60, 255), "SC"), ("hhidt", (230, 150, 20, 255), "DT"),
                                ("hhiik", (180, 20, 20, 255), "IK"), ("hhidp", (230, 190, 30, 255), "X2"),
-                               ("hhifs", (240, 100, 20, 255), "FS")]:
+                               ("hhifs", (240, 100, 20, 255), "FS"), ("hhirn", (110, 20, 30, 255), "RN")]:
         write(f"graphics/hh/{name}.png", box(32, 32, color, label, scale=3))
     back = Picture(82, 6)
     back.rect(0, 0, 82, 6, (30, 30, 30, 200))

@@ -11,6 +11,7 @@ class HH_ControllerLayout ui {
         InputEvent.Key_Pad_LTrigger,
         InputEvent.Key_Pad_RTrigger,
         InputEvent.Key_Pad_A,
+        InputEvent.Key_Pad_B,
         InputEvent.Key_Pad_X,
         InputEvent.Key_Pad_Y,
         InputEvent.Key_Pad_RThumb,
@@ -29,6 +30,7 @@ class HH_ControllerLayout ui {
         "+zoom",
         "+attack",
         "+use",
+        "+crouch",
         "+reload",
         "weapnext",
         "hh_kick",
@@ -38,7 +40,7 @@ class HH_ControllerLayout ui {
         "slot 1",                       // the d-pad goes clockwise from the left
         "slot 2",
         "slot 3",
-        "slot 4",
+        "hh_equipment",
         "pause",
         "menu_main"
     };

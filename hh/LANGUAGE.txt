@@ -21,6 +21,7 @@ HH_MSG_POWERUP_2 = "Double Points!";
 HH_MSG_POWERUP_3 = "Max Ammo!";
 HH_MSG_POWERUP_4 = "Ka-Boom!";
 HH_MSG_POWERUP_5 = "Fire Sale!";
+HH_MSG_POWERUP_6 = "Risen!";
 
 // The HUD
 HH_HUD_GAME_OVER = "Game Over";
@@ -34,6 +35,7 @@ HH_TAG_QUICK_REVIVE = "Quick Revive";
 HH_TAG_JUGGERNOG = "Juggernog";
 HH_TAG_SPEED_COLA = "Speed Cola";
 HH_TAG_DOUBLE_TAP = "Double Tap";
+HH_TAG_KEY = "Key";
 
 // Menus
 HH_PAD_LAYOUT_ASK = "Use the zombies controller layout?\n\nRT fire, LT zoom, A use, X reload, Y swap weapon,\nright stick click kick, LB repulse, RB twice drop weapon,\nd-pad weapons 1-4 clockwise from the left,\nleft stick click sprint, Start pause, Back menu.\nThose buttons lose what they did; the rest stay as they are.";

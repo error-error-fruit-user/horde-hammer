@@ -22,8 +22,18 @@ class HH_LastStand : Inventory {
         +INVENTORY.UNTOSSABLE
     }
 
-    // The pistol for going down: the held HH_Weapon with the highest LastStand, else the starting weapon
+    // The pistol for going down: the held HH_Weapon with the highest LastStand, else the starting
+    // weapon; one with a Downed weapon gives that instead
     static class<Weapon> ChoosePistol(Actor player, HH_InventoryManager manager) {
+        let pistol = HH_LastStand.HeldPistol(player, manager);
+        let zombiesWeapon = (class<HH_Weapon>)(pistol);
+        if (zombiesWeapon != null && GetDefaultByType(zombiesWeapon).downed != null) {
+            return GetDefaultByType(zombiesWeapon).downed;
+        }
+        return pistol;
+    }
+
+    static class<Weapon> HeldPistol(Actor player, HH_InventoryManager manager) {
         class<Weapon> best = null;
         let bestRank = 0;
         for (let item = player.Inv; item != null; item = item.Inv) {
@@ -141,6 +151,7 @@ class HH_LastStand : Inventory {
             pawn.A_SetBlend("Red", 0.4, TICRATE * 3);
             HH_Players.Message("$HH_MSG_REVIVED", number);
             HH_Events.Fire('player_revived', number, self.reviver);
+            HH_Risen.Revived(pawn, manager);
         } else if (!gameOver) {
             HH_Players.Message("$HH_MSG_BLED_OUT", number);
             HH_Events.Fire('player_bled_out', number);

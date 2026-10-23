@@ -14,6 +14,8 @@ class HH_Weapon : Weapon {
     meta int lastStand;         // the pistol for going down: the highest one held wins, 0 for never
     meta bool counted;          // counts against hh_max_weapons (drinks and melee don't)
     meta class<Weapon> upgrade; // its upgraded version, which wall buys sell ammo for
+    meta bool equipment;        // carried apart from the weapons (hh_max_equipment), on the equipment key
+    meta class<Weapon> downed;  // given for the last stand instead, when this is the pistol
 
     property ActiveAmmo: activeAmmo;
     property ReloadFrameRate: reloadFrameRate;
@@ -23,6 +25,8 @@ class HH_Weapon : Weapon {
     property LastStand: lastStand;
     property Counted: counted;
     property Upgrade: upgrade;
+    property Equipment: equipment;
+    property Downed: downed;
 
     Default {
         HH_Weapon.Counted true;

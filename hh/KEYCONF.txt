@@ -3,9 +3,12 @@
 
 alias hh_kick "netevent hh_kick"
 alias hh_repulse "netevent hh_repulse"
+alias hh_equipment "netevent hh_equipment"
 
 addkeysection "Horde Hammer" hh_keys
 addmenukey "Kick" hh_kick
 addmenukey "Repulse (hold off the next round)" hh_repulse
+addmenukey "Equipment" hh_equipment
 defaultbind f hh_kick
 defaultbind q hh_repulse
+defaultbind g hh_equipment

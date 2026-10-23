@@ -10,6 +10,7 @@
 server int hh_start_points = -1;                 // points a player starts with
 server int hh_respawn_points = -1;               // the least a player has after respawning at a new round
 server int hh_max_weapons = -1;                  // weapons a player can carry, not counting melee and drinks
+server int hh_max_equipment = -1;              // pieces of equipment a player can carry
 server int hh_perk_limit = -1;                   // perks a player can hold at once, 0 for no limit
 server float hh_player_speed = -1;               // player speed, 0 to leave the player class's own
 server int hh_health = -1;                       // health without Juggernog
@@ -78,6 +79,8 @@ server int hh_kaboom_points = -1;
 server int hh_bleed_out_time = -1;               // tics a downed player waits for a revive
 server int hh_revive_time = -1;                  // tics to revive someone
 server int hh_quick_revive_time = -1;            // with Quick Revive
+server int hh_risen_time = -1;
+server int hh_risen_rounds = -1;
 server int hh_solo_last_stand_time = -1;         // tics before solo Quick Revive brings the player back
 server int hh_solo_revives = -1;                 // solo Quick Revive can be bought this many times
 server int hh_solo_quick_revive_cost = -1;      

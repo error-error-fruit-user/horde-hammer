@@ -9,6 +9,9 @@ class HH_InventoryManager : Inventory {
 
     Array<class<HH_Perk> > perks;
     Array<Weapon> weapons;              // the weapons that count against hh_max_weapons, in slot order
+    Array<Weapon> equipment;            // equipment (hh_max_equipment), in the order it came
+    class<Weapon> lastWeapon, lastEquipment;    // what the equipment key goes back to
+    int risenRound;                     // the round this player last rose (HH_Risen)
     class<Weapon> melee, startingWeapon;
     bool scanned;                       // weapons and melee found after the player got their items
     bool skipPickup;                    // giving a weapon that shouldn't count (last stand)
@@ -36,14 +39,14 @@ class HH_InventoryManager : Inventory {
         return HH_InventoryManager(player.FindInventory('HH_InventoryManager'));
     }
 
-    // Whether a weapon class counts against hh_max_weapons: melee and drinks don't
+    // Whether a weapon class counts against hh_max_weapons: melee, drinks and equipment don't
     static bool Counts(class<Weapon> type) {
         if (type == null) {
             return false;
         }
         let zombiesWeapon = (class<HH_Weapon>)(type);
         if (zombiesWeapon != null) {
-            return GetDefaultByType(zombiesWeapon).counted;
+            return GetDefaultByType(zombiesWeapon).counted && !GetDefaultByType(zombiesWeapon).equipment;
         }
         return GetDefaultByType(type).ammoType1 != null;
     }
@@ -67,6 +70,11 @@ class HH_InventoryManager : Inventory {
             }
         }
         return null;
+    }
+
+    static bool IsEquipment(class<Weapon> type) {
+        let zombiesWeapon = (class<HH_Weapon>)(type);
+        return zombiesWeapon != null && GetDefaultByType(zombiesWeapon).equipment;
     }
 
     static class<Weapon> UpgradeOf(class<Weapon> type) {
@@ -117,6 +125,17 @@ class HH_InventoryManager : Inventory {
         if (!self.scanned && self.owner.player != null && self.owner.player.ReadyWeapon != null) {
             self.Scan();
         }
+        for (let i = self.equipment.Size() - 1; i >= 0; --i) {
+            if (self.equipment[i] == null || self.equipment[i].owner != self.owner) {
+                self.equipment.Delete(i);
+            }
+        }
+        let ready = self.owner.player != null? self.owner.player.ReadyWeapon: null;
+        if (ready != null && self.equipment.Find(ready) != self.equipment.Size()) {
+            self.lastEquipment = ready.GetClass();
+        } else if (ready != null && (self.Owns(ready) || ready.GetClass() == self.melee)) {
+            self.lastWeapon = ready.GetClass();
+        }
         self.hud.Update();
     }
 
@@ -125,12 +144,15 @@ class HH_InventoryManager : Inventory {
     void Scan() {
         self.scanned = true;
         self.weapons.Clear();
+        self.equipment.Clear();
         for (let item = self.owner.Inv; item != null; item = item.Inv) {
             let weapon = Weapon(item);
             if (weapon == null || weapon is 'HH_Drink') {
                 continue;
             }
-            if (HH_InventoryManager.Counts(weapon.GetClass())) {
+            if (HH_InventoryManager.IsEquipment(weapon.GetClass())) {
+                self.equipment.Push(weapon);
+            } else if (HH_InventoryManager.Counts(weapon.GetClass())) {
                 self.weapons.Push(weapon);
             } else if (self.melee == null && weapon.ammoType1 == null) {
                 // equipment the player starts with (grenades) has ammo, and isn't melee
@@ -158,6 +180,19 @@ class HH_InventoryManager : Inventory {
         }
         let weapon = Weapon(item);
         if (weapon != null && self.scanned && !self.lastStand && self.owner.FindInventory(weapon.GetClass()) == null
+                && HH_InventoryManager.IsEquipment(weapon.GetClass())) {
+            // a fourth piece of equipment takes the place of the one in hand, or the newest
+            if (self.equipment.Size() >= max(1, HH_Settings.Int("hh_max_equipment"))) {
+                let ready = self.owner.player.ReadyWeapon;
+                let replaced = self.equipment.Find(ready) != self.equipment.Size()? ready: self.equipment[self.equipment.Size() - 1];
+                self.Abandon(replaced);
+                if (replaced.ammoType1 != null) {
+                    self.owner.SetInventory(replaced.ammoType1, 0);
+                }
+                replaced.Destroy();
+            }
+            self.equipment.Push(weapon);
+        } else if (weapon != null && self.scanned && !self.lastStand && self.owner.FindInventory(weapon.GetClass()) == null
                 && HH_InventoryManager.Counts(weapon.GetClass())) {
             if (self.AtCapacity()) {
                 self.DropCurrent();
@@ -196,6 +231,11 @@ class HH_InventoryManager : Inventory {
         if (!passive || self.owner == null) {
             return;
         }
+        // rising: the floor that hurts doesn't
+        if (inflictor == null && source == null && self.owner.FindInventory('HH_RisenPower') != null) {
+            newDamage = 0;
+            return;
+        }
         if (!self.IsActive()) {
             newDamage = 0;
         } else if (damage >= self.owner.health) {
@@ -223,11 +263,30 @@ class HH_InventoryManager : Inventory {
         }
     }
 
+    // Dead on the spot, no last stand: watching until the next round, or the end of the game when
+    // nobody is left
+    void Perish() {
+        let number = self.owner.PlayerNumber();
+        for (let i = 0; i < MAXPLAYERS; ++i) {
+            if (i != number && HH_Util.IsActive(i)) {
+                HH_Players.Message("$HH_MSG_BLED_OUT", number);
+                HH_Events.Fire('player_bled_out', number);
+                self.owner.GiveInventory('HH_Spectate', 1);
+                return;
+            }
+        }
+        let rounds = HH_Rounds.Get();
+        if (rounds != null) {
+            rounds.EndGame();
+        }
+    }
+
     // Back in the game at a new round: the class's starting items, at least hh_respawn_points
     // points, at a respawn spot (or a player start)
     void Respawn() {
         self.owner.ClearInventory();
         self.weapons.Clear();
+        self.equipment.Clear();
         self.perks.Clear();
         self.fastReload = false;
         self.doubleFire = false;
@@ -282,8 +341,61 @@ class HH_InventoryManager : Inventory {
         }
     }
 
-    // The weapon keys: next and previous go through the carried weapons then melee
+    // Whether the equipment is in hand: the weapon keys then go through it instead of the weapons
+    bool InEquipment() {
+        let ready = self.owner.player != null? self.owner.player.ReadyWeapon: null;
+        return ready != null && self.equipment.Find(ready) != self.equipment.Size();
+    }
+
+    // Equipment that can come up: thrown things need something left to throw
+    bool Usable(Weapon weapon) {
+        return weapon != null && (weapon.ammoType1 == null || self.owner.CountInv(weapon.ammoType1) > 0);
+    }
+
+    // The equipment key: from the weapons to the equipment last held (or the first usable), and back
+    void SwapSet() {
+        if (self.InEquipment()) {
+            let back = self.lastWeapon != null? Weapon(self.owner.FindInventory(self.lastWeapon)): null;
+            if (back != null) {
+                self.owner.A_SelectWeapon(back.GetClass());
+            } else {
+                self.SelectBest();
+            }
+            return;
+        }
+        let last = self.lastEquipment != null? Weapon(self.owner.FindInventory(self.lastEquipment)): null;
+        if (self.equipment.Find(last) != self.equipment.Size() && self.Usable(last)) {
+            self.owner.A_SelectWeapon(last.GetClass());
+            return;
+        }
+        foreach (piece : self.equipment) {
+            if (self.Usable(piece)) {
+                self.owner.A_SelectWeapon(piece.GetClass());
+                return;
+            }
+        }
+    }
+
+    // Next and previous through the equipment, skipping what is used up
+    void CycleEquipment(int step) {
+        let count = self.equipment.Size();
+        let index = self.equipment.Find(self.owner.player.ReadyWeapon);
+        for (let i = 1; i <= count; ++i) {
+            let piece = self.equipment[((index + step * i) % count + count) % count];
+            if (piece != self.owner.player.ReadyWeapon && self.Usable(piece)) {
+                self.owner.A_SelectWeapon(piece.GetClass());
+                return;
+            }
+        }
+    }
+
+    // The weapon keys: next and previous go through the carried weapons then melee (or the
+    // equipment, when it is in hand)
     void NextWeapon() {
+        if (self.InEquipment()) {
+            self.CycleEquipment(1);
+            return;
+        }
         if (self.weapons.Size() == 0) {
             return;
         }
@@ -302,6 +414,10 @@ class HH_InventoryManager : Inventory {
     }
 
     void PreviousWeapon() {
+        if (self.InEquipment()) {
+            self.CycleEquipment(-1);
+            return;
+        }
         if (self.weapons.Size() == 0) {
             return;
         }
@@ -320,8 +436,15 @@ class HH_InventoryManager : Inventory {
         }
     }
 
-    // Slot 1 is the first carried weapon, slot 2 the second...; slot 0 (the 0 key) is melee
+    // Slot 1 is the first carried weapon, slot 2 the second...; slot 0 (the 0 key) is melee. With
+    // the equipment in hand, slot 1 is the first piece of equipment...
     void SelectWeapon(int slot) {
+        if (self.InEquipment()) {
+            if (slot >= 1 && slot <= self.equipment.Size() && self.Usable(self.equipment[slot - 1])) {
+                self.owner.A_SelectWeapon(self.equipment[slot - 1].GetClass());
+            }
+            return;
+        }
         if (slot == 0) {
             if (self.melee != null && self.owner.FindInventory(self.melee) != null) {
                 self.owner.A_SelectWeapon(self.melee);
@@ -339,6 +462,10 @@ class HH_InventoryManager : Inventory {
         let index = self.weapons.Find(weapon);
         if (index != self.weapons.Size()) {
             self.weapons.Delete(index);
+        }
+        index = self.equipment.Find(weapon);
+        if (index != self.equipment.Size()) {
+            self.equipment.Delete(index);
         }
     }
 

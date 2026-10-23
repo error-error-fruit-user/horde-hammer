@@ -72,6 +72,7 @@ class MyMap_Defaults : HH_Defaults {
 | Use | Buy what you're touching, take the box's weapon, hold next to a downed teammate to revive them; while spectating, watch the next player |
 | F (`hh_kick`) | Kick |
 | Q (`hh_repulse`) | Repulse: hold off the next round (everyone has to keep pressing it) |
+| G (`hh_equipment`) | Equipment |
 | Drop weapon, twice | Drop the weapon in hand (costs `hh_drop_weapon_cost`) |
 | 1, 2, ..., 0 | The first carried weapon, the second..., 0 for melee |
 
@@ -86,13 +87,15 @@ The first time a player presses a controller button, Horde Hammer asks once whet
 | Right trigger | Fire |
 | Left trigger | Zoom |
 | A | Use |
+| B | Crouch |
 | X | Reload |
 | Y | Swap weapon |
 | Right stick click | Kick |
 | Left stick click | Sprint |
 | Left bumper | Repulse |
 | Right bumper, twice | Drop weapon |
-| D-pad, clockwise from left | Weapons 1 to 4 |
+| D-pad left, up, right | Weapons 1 to 3 |
+| D-pad down | Equipment (`hh_equipment`) |
 | Start | Pause |
 | Back | Main menu |
 

@@ -204,6 +204,11 @@ class HH_Input : EventHandler {
             if (HH_Settings.Bool("hh_kick_enabled") && kick != null && manager.IsActive()) {
                 kick.Kick();
             }
+        } else if (e.Name == 'hh_equipment') {
+            if (manager.IsActive() && manager.switchWeapon && manager.ticsSinceSwitch > manager.Default.ticsSinceSwitch) {
+                manager.ticsSinceSwitch = 0;
+                manager.SwapSet();
+            }
         } else if (e.Name == 'hh_drop') {
             let dropper = HH_PickupDropper(pawn.FindInventory('HH_PickupDropper'));
             if (dropper != null && manager.IsActive()) {

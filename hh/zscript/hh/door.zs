@@ -37,6 +37,12 @@ class HH_Door : HH_Interactable {
             return false;
         }
         player.A_StartSound("hh/purchase", CHAN_AUTO);
+        self.OpenFor(player, cost);
+        return true;
+    }
+
+    // Opened by `player` (bought, or with a key for nothing): its zones open and it goes
+    void OpenFor(PlayerPawn player, int cost) {
         let spawning = HH_Spawning.Get();
         for (let i = 0; i < 4; ++i) {
             if (spawning != null && self.args[i] != 0) {
@@ -45,7 +51,6 @@ class HH_Door : HH_Interactable {
         }
         HH_Events.Fire('door_opened', player.PlayerNumber(), self.tid, cost);
         self.Open();
-        return true;
     }
 
     // What buying does to the door itself; a game can play an animation instead
