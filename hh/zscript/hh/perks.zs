@@ -223,9 +223,20 @@ class HH_Bottle : Actor {
         +FLATSPRITE
     }
 
+    // A full bottle kills whatever it hits, however many rounds in
+    override int DoSpecialDamage(Actor victim, int damage, Name damageType) {
+        if (victim != null && victim.bIsMonster) {
+            return max(damage, victim.health);
+        }
+        return damage;
+    }
+
     States {
     Spawn:
-        HHBT A 1 { self.pitch += 25; }
+        // the drink that threw it gives it its own bottle (HH_Drink.Throw); "####" keeps it
+        HHBT A 0;
+    Fly:
+        "####" "#" 1 { self.pitch += 25; }
         Loop;
     Death:
         TNT1 A 1;
