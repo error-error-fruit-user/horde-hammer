@@ -11,13 +11,20 @@ class HH_WallBuy : HH_Interactable {
     Default {
         //$Category "Horde Hammer"
         //$Sprite HHWBA0
+        //$Arg0 "Cost"
+        //$Arg0Tooltip "0: the class's own"
         HH_WallBuy.Cost 500;
         +WALLSPRITE
         +NOGRAVITY
     }
 
+    // The price here: the map's (its first argument), else the class's
+    int CurrentCost() {
+        return self.args[0] > 0? self.args[0]: self.cost;
+    }
+
     int AmmoCost() {
-        return self.cost / max(1, HH_Settings.Int("hh_wall_ammo_divisor"));
+        return self.CurrentCost() / max(1, HH_Settings.Int("hh_wall_ammo_divisor"));
     }
 
     // The upgraded version of the weapon, if the game has one (HH_Weapon.Upgrade)
@@ -51,7 +58,7 @@ class HH_WallBuy : HH_Interactable {
         }
         let held = self.HeldVersion(player);
         if (held == null) {
-            HH_Interactable.HintCost(manager, self.cost);
+            HH_Interactable.HintCost(manager, self.CurrentCost());
         } else if (!HH_WallBuy.AmmoIsFull(player, held)) {
             HH_Interactable.HintCost(manager, self.HeldAmmoCost(held));
         }
@@ -71,7 +78,7 @@ class HH_WallBuy : HH_Interactable {
             }
             manager.FillAmmo(GetDefaultByType(held).ammoType1);
         } else {
-            if (!HH_Points.Take(player, self.cost)) {
+            if (!HH_Points.Take(player, self.CurrentCost())) {
                 player.A_StartSound("hh/denied", CHAN_AUTO);
                 return false;
             }
