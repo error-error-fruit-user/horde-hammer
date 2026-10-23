@@ -199,9 +199,11 @@ class HH_Input : EventHandler {
             // Always told, so a game can use the key for itself too (nacht skips its intro with it)
             HH_Events.Fire('repulse_pressed', e.Player);
         } else if (e.Name == 'hh_kick') {
-            // a game may replace the kick with a subclass of its own (a knife)
+            // a game may replace the kick with a subclass of its own (a knife); it is for Horde
+            // Hammer's weapons, so a mod's own weapons keep their own melee
             let kick = HH_KickItem(pawn.FindInventory('HH_KickItem', true));
-            if (HH_Settings.Bool("hh_kick_enabled") && kick != null && manager.IsActive()) {
+            let inHand = pawn.player.ReadyWeapon;
+            if (HH_Settings.Bool("hh_kick_enabled") && kick != null && manager.IsActive() && (inHand == null || inHand is 'HH_Weapon')) {
                 kick.Kick();
             }
         } else if (e.Name == 'hh_equipment') {

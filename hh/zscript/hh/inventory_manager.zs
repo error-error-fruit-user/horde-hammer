@@ -73,9 +73,20 @@ class HH_InventoryManager : Inventory {
         return null;
     }
 
+    // Equipment: what a weapon says is (grenades, keys...), and every melee weapon (a weapon
+    // without ammo: the fist, a knife)
     static bool IsEquipment(class<Weapon> type) {
+        if (type == null || type is 'HH_Drink') {
+            return false;
+        }
         let zombiesWeapon = (class<HH_Weapon>)(type);
-        return zombiesWeapon != null && GetDefaultByType(zombiesWeapon).equipment;
+        if (zombiesWeapon != null && GetDefaultByType(zombiesWeapon).equipment) {
+            return true;
+        }
+        if (GetDefaultByType(type).ammoType1 != null) {
+            return false;
+        }
+        return zombiesWeapon == null || !GetDefaultByType(zombiesWeapon).counted;
     }
 
     static class<Weapon> UpgradeOf(class<Weapon> type) {
@@ -161,11 +172,12 @@ class HH_InventoryManager : Inventory {
             }
             if (HH_InventoryManager.IsEquipment(weapon.GetClass())) {
                 self.equipment.Push(weapon);
+                // melee is equipment, but the first is also what a player with no weapons holds
+                if (self.melee == null && weapon.ammoType1 == null) {
+                    self.melee = weapon.GetClass();
+                }
             } else if (HH_InventoryManager.Counts(weapon.GetClass())) {
                 self.weapons.Push(weapon);
-            } else if (self.melee == null && weapon.ammoType1 == null) {
-                // equipment the player starts with (grenades) has ammo, and isn't melee
-                self.melee = weapon.GetClass();
             }
         }
         let ready = self.owner.player.ReadyWeapon;
@@ -448,55 +460,36 @@ class HH_InventoryManager : Inventory {
         }
     }
 
-    // The weapon keys: next and previous go through the carried weapons then melee (or the
-    // equipment, when it is in hand)
+    // The weapon keys: next and previous go through the carried weapons (or the equipment, when it
+    // is in hand)
     void NextWeapon() {
         if (self.InEquipment()) {
             self.CycleEquipment(1);
-            return;
-        }
-        if (self.weapons.Size() == 0) {
-            return;
-        }
-        let index = self.weapons.Find(self.owner.player.ReadyWeapon);
-        if (index == self.weapons.Size()) {
-            self.owner.A_SelectWeapon(self.weapons[0].GetClass());
-        } else if (index == self.weapons.Size() - 1) {
-            if (self.melee != null && self.owner.FindInventory(self.melee) != null) {
-                self.owner.A_SelectWeapon(self.melee);
-            } else {
-                self.owner.A_SelectWeapon(self.weapons[0].GetClass());
-            }
         } else {
-            self.owner.A_SelectWeapon(self.weapons[index + 1].GetClass());
+            self.CycleWeapons(1);
         }
     }
 
     void PreviousWeapon() {
         if (self.InEquipment()) {
             self.CycleEquipment(-1);
-            return;
-        }
-        if (self.weapons.Size() == 0) {
-            return;
-        }
-        let last = self.weapons.Size() - 1;
-        let index = self.weapons.Find(self.owner.player.ReadyWeapon);
-        if (index == self.weapons.Size()) {
-            self.owner.A_SelectWeapon(self.weapons[last].GetClass());
-        } else if (index == 0) {
-            if (self.melee != null && self.owner.FindInventory(self.melee) != null) {
-                self.owner.A_SelectWeapon(self.melee);
-            } else {
-                self.owner.A_SelectWeapon(self.weapons[last].GetClass());
-            }
         } else {
-            self.owner.A_SelectWeapon(self.weapons[index - 1].GetClass());
+            self.CycleWeapons(-1);
         }
     }
 
-    // Slot 1 is the first carried weapon, slot 2 the second...; slot 0 (the 0 key) is melee. With
-    // the equipment in hand, slot 1 is the first piece of equipment...
+    void CycleWeapons(int step) {
+        let count = self.weapons.Size();
+        if (count == 0) {
+            return;
+        }
+        let index = self.weapons.Find(self.owner.player.ReadyWeapon);
+        let next = index == count? (step > 0? 0: count - 1): ((index + step) % count + count) % count;
+        self.owner.A_SelectWeapon(self.weapons[next].GetClass());
+    }
+
+    // Slot 1 is the first carried weapon, slot 2 the second...; slot 0 (the 0 key) brings up the
+    // equipment, like the equipment key. With the equipment in hand, slot 1 is its first piece...
     void SelectWeapon(int slot) {
         if (self.InEquipment()) {
             if (slot >= 1 && slot <= self.equipment.Size() && self.Usable(self.equipment[slot - 1])) {
@@ -505,9 +498,7 @@ class HH_InventoryManager : Inventory {
             return;
         }
         if (slot == 0) {
-            if (self.melee != null && self.owner.FindInventory(self.melee) != null) {
-                self.owner.A_SelectWeapon(self.melee);
-            }
+            self.SwapSet();
         } else if (slot <= self.weapons.Size()) {
             self.owner.A_SelectWeapon(self.weapons[slot - 1].GetClass());
         }
