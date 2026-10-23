@@ -14,6 +14,9 @@ class HH_InventoryManager : Inventory {
     bool skipPickup;                    // giving a weapon that shouldn't count (last stand)
 
     HH_HudState hud;
+    // Weapons unlocked from the box's roster, by class name, "-" in front when turned off; kept in
+    // the player's hh_unlocked so they stay unlocked whenever that class is loaded again
+    Array<String> unlocked;
 
     property SwitchDelay: ticsSinceSwitch;
 
@@ -94,6 +97,12 @@ class HH_InventoryManager : Inventory {
         super.AttachToOwner(other);
         self.hud = new('HH_HudState');
         self.switchWeapon = true;
+        if (other.player != null) {
+            let saved = CVar.GetCVar('hh_unlocked', other.player);
+            if (saved != null && saved.GetString() != "") {
+                saved.GetString().Split(self.unlocked, ",", TOK_SKIPEMPTY);
+            }
+        }
         if (HH_Settings.Float("hh_player_speed") > 0) {
             other.speed = HH_Settings.Float("hh_player_speed");
         }
@@ -382,6 +391,60 @@ class HH_InventoryManager : Inventory {
                     zombiesWeapon.DeactivateDoubleFire();
                 }
             }
+        }
+    }
+
+    // The weapon an unlocked entry names, when it is on and that class is loaded
+    static class<Weapon> UnlockedType(String token) {
+        if (token.Left(1) == "-") {
+            return null;
+        }
+        return (class<Weapon>)(token);
+    }
+
+    int UnlockIndex(class<Weapon> type) {
+        String name = type.GetClassName();
+        for (let i = 0; i < self.unlocked.Size(); ++i) {
+            let entry = self.unlocked[i];
+            if (entry.Left(1) == "-") {
+                entry = entry.Mid(1);
+            }
+            if (entry ~== name) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    bool IsUnlocked(class<Weapon> type) {
+        return type != null && self.UnlockIndex(type) >= 0;
+    }
+
+    void Unlock(class<Weapon> type) {
+        if (type != null && !self.IsUnlocked(type)) {
+            self.unlocked.Push(type.GetClassName());
+            self.SaveUnlocked();
+        }
+    }
+
+    void ToggleUnlocked(class<Weapon> type) {
+        let index = self.UnlockIndex(type);
+        if (index < 0) {
+            return;
+        }
+        let entry = self.unlocked[index];
+        self.unlocked[index] = entry.Left(1) == "-"? entry.Mid(1): "-"..entry;
+        self.SaveUnlocked();
+    }
+
+    // Only the player's own machine can write their CVar: it is told, and keeps it
+    void SaveUnlocked() {
+        String joined = "";
+        foreach (entry : self.unlocked) {
+            joined = joined == ""? entry: joined..","..entry;
+        }
+        if (self.owner != null && self.owner.player != null) {
+            EventHandler.SendInterfaceEvent(self.owner.PlayerNumber(), "hh_unlocked:"..joined);
         }
     }
 

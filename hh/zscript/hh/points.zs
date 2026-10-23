@@ -6,6 +6,7 @@ class HH_Points : Inventory {
         +INVENTORY.UNDROPPABLE
         +INVENTORY.UNTOSSABLE
         +INVENTORY.UNCLEARABLE
+        +INVENTORY.KEEPDEPLETED
     }
 
     clearscope static int CountOf(Actor player) {
@@ -37,6 +38,26 @@ class HH_Points : Inventory {
             manager.hud.AddDelta(-cost);
         }
         return true;
+    }
+
+    // Takes `cost` points even if the player has fewer, into debt (kicking a spinning box);
+    // what they earn pays it back
+    static void Charge(Actor player, int cost) {
+        let manager = HH_InventoryManager.Of(player);
+        if (manager == null || cost <= 0) {
+            return;
+        }
+        let points = player.FindInventory('HH_Points');
+        if (points == null) {
+            player.GiveInventory('HH_Points', 1);
+            points = player.FindInventory('HH_Points');
+            if (points == null) {
+                return;
+            }
+            points.amount = 0;
+        }
+        points.amount -= cost;
+        manager.hud.AddDelta(-cost);
     }
 }
 

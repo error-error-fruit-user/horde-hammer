@@ -22,6 +22,9 @@ class HH_HudState play {
     String hintArgument;
     int hintTics;
     double revive;
+    String rosterName;          // the weapon the box's roster shows, while it is near
+    bool rosterGives;           // whether the box can give it to this player
+    int rosterTics;
 
     void AddDelta(int value) {
         let delta = new('HH_PointsDelta');
@@ -45,6 +48,12 @@ class HH_HudState play {
         self.hintTics = 0;
     }
 
+    void SetRoster(String name, bool gives) {
+        self.rosterName = name;
+        self.rosterGives = gives;
+        self.rosterTics = 2;
+    }
+
     void SetRevive(double fraction) {
         self.revive = clamp(fraction, 0, 1);
     }
@@ -59,6 +68,9 @@ class HH_HudState play {
         }
         if (self.hintTics > 0) {
             --self.hintTics;
+        }
+        if (self.rosterTics > 0) {
+            --self.rosterTics;
         }
     }
 }
@@ -129,6 +141,14 @@ class HH_HudHandler : EventHandler {
     }
 
     override void InterfaceProcess(ConsoleEvent e) {
+        // this player's roster unlocks, kept in their own config (HH_InventoryManager.SaveUnlocked)
+        if (e.Name.Left(12) == "hh_unlocked:") {
+            let saved = CVar.FindCVar("hh_unlocked");
+            if (saved != null) {
+                saved.SetString(e.Name.Mid(12));
+            }
+            return;
+        }
         if (e.Name.Left(11) == "hh_message:") {
             self.Log().Add(HH_Util.Localized(e.Name.Mid(11), HH_Util.NameOf(e.Args[0])));
         } else if (e.Name == "hh_powerup_taken") {
@@ -246,6 +266,7 @@ class HH_HudHandler : EventHandler {
         self.DrawAmmo(manager);
         self.DrawPerks(manager);
         self.DrawHint(manager);
+        self.DrawRoster(manager);
     }
 
     ui void DrawPoints(HH_InventoryManager manager) {
@@ -361,6 +382,20 @@ class HH_HudHandler : EventHandler {
         let place = HH_HudHandler.PlaceOf("hint");
         let text = HH_Util.Localized(manager.hud.hintId, manager.hud.hintArgument);
         HH_HudHandler.Text(conFont, HH_HudHandler.HINT_COLOR, place, text, 0, HH_HudHandler.ScaleOf("hint"));
+    }
+
+    // The roster's weapon, over the hint: blinking red when the box can't give it
+    ui void DrawRoster(HH_InventoryManager manager) {
+        if (!HH_HudHandler.Shows("hint") || manager.hud.rosterTics <= 0 || manager.hud.rosterName == "") {
+            return;
+        }
+        if (!manager.hud.rosterGives && (level.maptime / 8) % 2 == 1) {
+            return;
+        }
+        let scale = HH_HudHandler.ScaleOf("hint");
+        let place = HH_HudHandler.PlaceOf("hint") - (0, 14 * scale);
+        let tint = manager.hud.rosterGives? HH_HudHandler.HINT_COLOR: Font.CR_RED;
+        HH_HudHandler.Text(bigFont, tint, place, manager.hud.rosterName, 0, scale * 0.75);
     }
 
     ui void DrawRevive(HH_InventoryManager manager) {

@@ -1,16 +1,41 @@
 // The mystery box: pay, watch it spin, take the weapon it gives. Sometimes it moves instead.
+//
+// Kicked, it does more: a spinning box spins again for hh_box_respin_cost (the only thing that can
+// put a player in debt); the weapon it offers falls to the floor for anyone, for
+// hh_box_kick_drop_cost; and a box shot
+// on both sides by the kicker shortly before shows its roster (HH_MysteryBoxRoster). Explosions
+// and projectiles knock it around.
 
 class HH_MysteryBox : HH_Interactable {
+    const KNOCK_MOST = 14.0;    // the fastest a hit sends it, in map units per tic
+    const SPIN_DECAY = 0.9;     // what is left of its turning each tic
+
     HH_MysteryBoxLocation location;
     bool shouldFade;
     bool canMove;
     int spinCount;
+    HH_MysteryBoxSpin spin;
+    HH_MysteryBoxPickup offer;
+    HH_MysteryBoxRoster roster;
+    double turning;             // degrees a tic, from being knocked
+    int leftShot[MAXPLAYERS];   // when each player last shot each side (level.maptime + 1)
+    int rightShot[MAXPLAYERS];
 
     Default {
         Radius 40;
         Height 40;
+        Health 1000;
+        BounceType "Doom";
+        BounceFactor 0.35;
+        WallBounceFactor 0.6;
         +WALLSPRITE
         +SOLID
+        +SHOOTABLE
+        +NOBLOOD
+        +NOTAUTOAIMED
+        +DONTTHRUST
+        +BOUNCEONACTORS
+        -BOUNCEAUTOOFF
     }
 
     static HH_MysteryBox SpawnAt(HH_MysteryBoxLocation location, bool canMove) {
@@ -27,10 +52,18 @@ class HH_MysteryBox : HH_Interactable {
     }
 
     override void DoTouch(PlayerPawn player, HH_InventoryManager manager) {
+        if (self.roster != null) {
+            self.roster.Bump(player);
+            return;
+        }
         HH_Interactable.HintCost(manager, self.Cost());
     }
 
     override bool DoUse(PlayerPawn player, HH_InventoryManager manager) {
+        if (self.roster != null) {
+            self.roster.Use(player);
+            return false;
+        }
         if (!HH_Points.Take(player, self.Cost())) {
             player.A_StartSound("hh/denied", CHAN_AUTO);
             return false;
@@ -57,12 +90,117 @@ class HH_MysteryBox : HH_Interactable {
     void Open(PlayerPawn receiver) {
         ++self.spinCount;
         self.bSpecial = false;
-        HH_MysteryBoxSpin.SpawnFor(self, receiver);
+        self.spin = HH_MysteryBoxSpin.SpawnFor(self, receiver);
         self.SetStateLabel("Open");
     }
 
     void Close() {
+        if (self.roster != null) {
+            self.roster.Destroy();
+            self.roster = null;
+        }
         self.SetStateLabel("Close");
+    }
+
+    // Hits: the kick does what the box is doing allows; a shot from a player marks the side it
+    // hit; explosions and projectiles knock the box. Nothing hurts it.
+    override int DamageMobj(Actor inflictor, Actor source, int damage, Name mod, int flags, double angle) {
+        let player = PlayerPawn(source);
+        let at = inflictor != null? inflictor.pos: source != null? source.pos: self.pos;
+        if (mod == 'HH_Kick') {
+            if (player != null) {
+                self.Kicked(player);
+            }
+            return 0;
+        }
+        if (player != null && player.player != null && !(flags & DMG_EXPLOSION)) {
+            let number = player.PlayerNumber();
+            if (self.SideOf(at) < 0) {
+                self.leftShot[number] = level.maptime + 1;
+            } else {
+                self.rightShot[number] = level.maptime + 1;
+            }
+        }
+        if ((flags & DMG_EXPLOSION) || (inflictor != null && inflictor.bMissile)) {
+            HH_MysteryBox.Knock(self, at, damage);
+        }
+        return 0;
+    }
+
+    // Which side of the box a point is on, as the box faces: below 0 its left, above its right
+    double SideOf(Vector3 point) {
+        let right = Actor.AngleToVector(self.angle - 90);
+        let offset = level.Vec2Diff(self.pos.xy, point.xy);
+        return offset dot right;
+    }
+
+    // Sends a box flying away from `from`, turning it by where it was hit: an explosion's or a
+    // projectile's work, or anything a game's weapon calls it for (a hit that does no damage).
+    // Does nothing to anything but a box.
+    static void Knock(Actor thing, Vector3 from, double force) {
+        let box = HH_MysteryBox(thing);
+        if (box == null || !HH_Settings.Bool("hh_box_push")) {
+            return;
+        }
+        let away = level.Vec2Diff(from.xy, box.pos.xy);
+        let direction = away.Length() > 1? away.Unit(): Actor.AngleToVector(box.angle + 180);
+        let speed = clamp(force * 0.05, 3, HH_MysteryBox.KNOCK_MOST);
+        box.vel += (direction.x * speed, direction.y * speed, speed * 0.6);
+        let length = box.vel.xy.Length();
+        if (length > HH_MysteryBox.KNOCK_MOST) {
+            box.vel.xy *= HH_MysteryBox.KNOCK_MOST / length;
+        }
+        box.turning += (box.SideOf(from) < 0? -1: 1) * speed * 2;
+    }
+
+    override void Tick() {
+        super.Tick();
+        if (self.bDestroyed) {
+            return;
+        }
+        if (abs(self.turning) > 0.05) {
+            self.angle += self.turning;
+            self.turning *= HH_MysteryBox.SPIN_DECAY;
+        } else {
+            self.turning = 0;
+        }
+    }
+
+    // Whether `player` shot both sides of the box within the reveal time
+    bool Marked(PlayerPawn player) {
+        let number = player.PlayerNumber();
+        let window = HH_Settings.Int("hh_roster_reveal_time");
+        let left = self.leftShot[number];
+        let right = self.rightShot[number];
+        return left > 0 && right > 0 && level.maptime + 1 - min(left, right) <= window;
+    }
+
+    void Kicked(PlayerPawn player) {
+        let manager = HH_InventoryManager.Of(player);
+        if (manager == null || !manager.IsActive()) {
+            return;
+        }
+        if (self.spin != null) {
+            HH_Points.Charge(player, HH_Settings.Int("hh_box_respin_cost"));
+            self.spin.Restart();
+            self.A_StartSound("hh/box_open", CHAN_AUTO, volume: 0.5);
+        } else if (self.offer != null) {
+            if (HH_Points.Take(player, HH_Settings.Int("hh_box_kick_drop_cost"))) {
+                self.offer.KnockToFloor();
+            } else {
+                player.A_StartSound("hh/denied", CHAN_AUTO);
+            }
+        } else if (self.roster != null) {
+            self.roster.Kicked(player);
+        } else if (self.bSpecial && self.Marked(player)) {
+            let number = player.PlayerNumber();
+            self.leftShot[number] = 0;
+            self.rightShot[number] = 0;
+            self.roster = HH_MysteryBoxRoster.SpawnFor(self, player);
+            self.A_StartSound("hh/box_open", CHAN_AUTO, volume: 0.5);
+            self.SetStateLabel("Open");
+            HH_Events.Fire('box_roster_shown', player.PlayerNumber());
+        }
     }
 
     void FinishClosing() {
@@ -72,6 +210,11 @@ class HH_MysteryBox : HH_Interactable {
     // Goes away: now if nobody is using it, else once it closes
     void Fade() {
         self.shouldFade = true;
+        if (self.roster != null) {
+            self.roster.Destroy();
+            self.roster = null;
+            self.SetStateLabel("Close");
+        }
         if (self.bSpecial) {
             self.bSpecial = false;
             self.SetStateLabel("Fade");
@@ -116,6 +259,20 @@ class HH_MysteryBoxSpin : Actor {
         return spin;
     }
 
+    // Stays over the box, wherever it is knocked
+    override void Tick() {
+        super.Tick();
+        if (!self.bDestroyed && self.box != null) {
+            self.SetOrigin(self.box.OfferPosition(), true);
+            self.angle = self.box.angle;
+        }
+    }
+
+    // Kicked while spinning: it starts over
+    void Restart() {
+        self.SetStateLabel("Spawn");
+    }
+
     void Spin() {
         self.shown = HH_WeaponPool.Show(self.receiver, self.shown);
         if (self.shown != null) {
@@ -127,6 +284,7 @@ class HH_MysteryBoxSpin : Actor {
         if (self.box == null) {
             return;
         }
+        self.box.spin = null;
         if (self.box.ShouldMove()) {
             HH_MysteryBoxLock.SpawnFor(self.box, self.receiver);
             return;
@@ -143,7 +301,7 @@ class HH_MysteryBoxSpin : Actor {
             self.box.Close();
             return;
         }
-        HH_MysteryBoxPickup.SpawnFor(self.box, item, self.receiver);
+        self.box.offer = HH_MysteryBoxPickup.SpawnFor(self.box, item, self.receiver);
     }
 
     States {
@@ -197,6 +355,10 @@ class HH_MysteryBoxLock : Actor {
             return;
         }
         ++self.age;
+        if (self.box != null) {
+            let over = self.box.OfferPosition();
+            self.SetOrigin((over.xy, self.pos.z), true);
+        }
         self.angle += self.spinSpeed;
         self.spinSpeed = min(self.spinSpeed + HH_MysteryBoxLock.SPIN_GAIN, HH_MysteryBoxLock.SPIN_MOST);
         if (self.age > HH_MysteryBoxLock.RISE_DELAY) {
@@ -256,9 +418,31 @@ class HH_MysteryBoxPickup : HH_Pickup {
 
     override void Tick() {
         super.Tick();
+        if (self.bDestroyed) {
+            return;
+        }
+        if (self.box != null) {
+            self.SetOrigin(self.box.OfferPosition(), true);
+            self.angle = self.box.angle;
+            if (self.particles != null) {
+                self.particles.SetOrigin((self.box.pos.xy, self.box.floorz), true);
+            }
+        }
         if (--self.ticsLeft <= 0) {
             self.CloseBox();
         }
+    }
+
+    // Kicked: the weapon falls in front of the box, for anyone to take
+    void KnockToFloor() {
+        let dropped = HH_Pickup(Actor.Spawn('HH_Pickup', self.pos, ALLOW_REPLACE));
+        if (dropped != null) {
+            dropped.item = self.item;
+            dropped.angle = self.angle;
+            [dropped.sprite, dropped.frame, dropped.scale] = HH_Pickup.GetInfo(GetDefaultByType(self.item));
+            dropped.vel = (Actor.AngleToVector(self.angle, 3), 3);
+        }
+        self.CloseBox();
     }
 
     override void DoTouch(PlayerPawn player, HH_InventoryManager manager) {
@@ -275,6 +459,7 @@ class HH_MysteryBoxPickup : HH_Pickup {
         let particles = self.particles;
         self.GiveTo(player, manager);
         if (box != null) {
+            box.offer = null;
             box.Close();
         }
         if (particles != null) {
@@ -285,6 +470,7 @@ class HH_MysteryBoxPickup : HH_Pickup {
 
     void CloseBox() {
         if (self.box != null) {
+            self.box.offer = null;
             self.box.Close();
         }
         if (self.particles != null) {
@@ -422,5 +608,161 @@ class HH_MysteryBoxHandler : EventHandler {
                 self.locations[i].RemoveBox();
             }
         }
+    }
+}
+
+// The box's roster: every weapon the loaded files have, one at a time over the box, its name on
+// the HUD of everyone near (blinking red when the box can't give it to them). It pages by itself;
+// whoever opened it pages it with Use (crouched, backwards) and kicks the shown weapon to unlock
+// it for hh_unlock_cost, or to turn an unlocked one off and on again (HH_InventoryManager keeps
+// unlocks in the player's hh_unlocked). It closes once it has shown every weapon and nobody has
+// bumped or used it for hh_roster_idle_time. An opener who walks away or goes down lets it go:
+// the next player to use it takes it over.
+class HH_MysteryBoxRoster : Actor {
+    const SEEN_RANGE = 512;     // how near the HUD shows the name
+    const HOLD_RANGE = 384;     // how far its opener can go and keep it
+
+    HH_MysteryBox box;
+    PlayerPawn opener;
+    Array<class<Weapon> > weapons;
+    int index;
+    int pageTics;
+    int pagesShown;
+    int idleTics;
+
+    Default {
+        +NOGRAVITY
+        +WALLSPRITE
+        +NOBLOCKMAP
+        +NOINTERACTION
+        +BRIGHT
+    }
+
+    static HH_MysteryBoxRoster SpawnFor(HH_MysteryBox box, PlayerPawn opener) {
+        let roster = HH_MysteryBoxRoster(Actor.Spawn('HH_MysteryBoxRoster', box.OfferPosition(), ALLOW_REPLACE));
+        roster.box = box;
+        roster.opener = opener;
+        roster.angle = box.angle;
+        HH_WeaponPool.Everything(roster.weapons);
+        roster.Show();
+        return roster;
+    }
+
+    class<Weapon> Shown() {
+        return self.weapons.Size() != 0? self.weapons[self.index]: null;
+    }
+
+    void Show() {
+        let shown = self.Shown();
+        if (shown != null) {
+            [self.sprite, self.frame, self.scale] = HH_Pickup.GetInfo(GetDefaultByType(shown));
+        }
+    }
+
+    void Page(int step) {
+        let count = self.weapons.Size();
+        if (count == 0) {
+            return;
+        }
+        self.index = (self.index + step + count) % count;
+        self.Show();
+    }
+
+    bool Controls(PlayerPawn player) {
+        return player != null && player == self.opener;
+    }
+
+    void Bump(PlayerPawn player) {
+        if (self.Controls(player)) {
+            self.idleTics = 0;
+        }
+    }
+
+    void Use(PlayerPawn player) {
+        if (self.opener == null) {
+            self.opener = player;
+        }
+        if (!self.Controls(player) || player.player == null) {
+            return;
+        }
+        let back = (player.player.cmd.buttons & BT_CROUCH) != 0 || player.player.crouchFactor < 1;
+        self.Page(back? -1: 1);
+        self.idleTics = 0;
+        self.pageTics = 0;
+        player.A_StartSound("hh/box_open", CHAN_AUTO, volume: 0.3);
+    }
+
+    // The kick: unlock what the box can't give, or turn an unlocked weapon off or on again
+    void Kicked(PlayerPawn player) {
+        let manager = HH_InventoryManager.Of(player);
+        let shown = self.Shown();
+        if (!self.Controls(player) || manager == null || shown == null) {
+            return;
+        }
+        self.idleTics = 0;
+        if (manager.IsUnlocked(shown)) {
+            manager.ToggleUnlocked(shown);
+            player.A_StartSound("hh/purchase", CHAN_AUTO);
+        } else if (HH_WeaponPool.Gives(player, shown, false)) {
+            player.A_StartSound("hh/denied", CHAN_AUTO);
+        } else if (HH_Points.Take(player, HH_Settings.Int("hh_unlock_cost"))) {
+            manager.Unlock(shown);
+            player.A_StartSound("hh/purchase", CHAN_AUTO);
+            HH_Events.Fire('weapon_unlocked', player.PlayerNumber());
+        } else {
+            player.A_StartSound("hh/denied", CHAN_AUTO);
+        }
+    }
+
+    override void Tick() {
+        super.Tick();
+        if (self.bDestroyed) {
+            return;
+        }
+        if (self.box == null || self.weapons.Size() == 0) {
+            self.Destroy();
+            return;
+        }
+        self.SetOrigin(self.box.OfferPosition(), true);
+        self.angle = self.box.angle;
+
+        // an opener who left or went down lets it go
+        let manager = HH_InventoryManager.Of(self.opener);
+        if (self.opener != null && (manager == null || !manager.IsActive() || self.opener.Distance3D(self.box) > HH_MysteryBoxRoster.HOLD_RANGE)) {
+            self.opener = null;
+        }
+
+        ++self.idleTics;
+        // it pages by itself while nobody is paging it
+        if (self.idleTics >= HH_Settings.Int("hh_roster_page_time") && ++self.pageTics >= HH_Settings.Int("hh_roster_page_time")) {
+            self.pageTics = 0;
+            ++self.pagesShown;
+            self.Page(1);
+        }
+        if (self.pagesShown >= self.weapons.Size() && self.idleTics >= HH_Settings.Int("hh_roster_idle_time")) {
+            let box = self.box;
+            box.roster = null;
+            self.Destroy();
+            box.Close();
+            return;
+        }
+
+        let shown = self.Shown();
+        for (let i = 0; i < MAXPLAYERS; ++i) {
+            if (!HH_Util.InGame(i)) {
+                continue;
+            }
+            let pawn = players[i].mo;
+            let viewer = HH_InventoryManager.Of(pawn);
+            if (viewer != null && viewer.IsActive() && pawn.Distance3D(self) <= HH_MysteryBoxRoster.SEEN_RANGE) {
+                viewer.hud.SetRoster(GetDefaultByType(shown).GetTag(), HH_WeaponPool.Gives(pawn, shown));
+            }
+        }
+    }
+
+    States {
+    Spawn:
+        #### # -1 Bright;
+        Stop;
     }
 }

@@ -55,6 +55,13 @@ server int hh_box_fire_sale_cost = -1;
 server int hh_box_min_spins = -1;                // spins before the box can move
 server int hh_box_move_chance = -1;              // after that, it moves 1 time in this many
 server int hh_box_pickup_time = -1;              // tics to take the weapon
+server int hh_box_respin_cost = -1;
+server int hh_box_kick_drop_cost = -1;
+server int hh_box_push = -1;
+server int hh_roster_reveal_time = -1;
+server int hh_roster_page_time = -1;
+server int hh_roster_idle_time = -1;
+server int hh_unlock_cost = -1;
 
 // Wall buys
 server int hh_wall_ammo_divisor = -1;            // ammo costs the weapon's cost divided by this
@@ -78,6 +85,7 @@ server int hh_solo_quick_revive_cost = -1;
 // Each player's own
 user bool hh_toggled_zoom = true;               // zoom stays in until pressed again
 user bool hh_pad_layout_set = false;            // this player was offered the controller layout (false offers it again)
+user string hh_unlocked = "";
 
 // The HUD, each player's own: where each part is (0 to 1 across and down the screen), how big it
 // is, and whether it shows. The menu has a reset.

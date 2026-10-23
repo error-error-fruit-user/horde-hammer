@@ -101,7 +101,8 @@ class HH_NullPickup : Inventory {
     }
 }
 
-// Double tap the drop key to drop the weapon in hand, for hh_drop_weapon_cost points
+// Double tap the drop key to drop the weapon in hand, for hh_drop_weapon_cost points (never into
+// debt). A bottle already drunk drops for nothing: it looks like any other, but gives no perk.
 class HH_PickupDropper : Inventory {
     const DOUBLE_TAP_TICS = 35;
 
@@ -135,12 +136,15 @@ class HH_PickupDropper : Inventory {
         }
         let weapon = player.player.ReadyWeapon;
         let drink = HH_Drink(weapon);
-        if (manager.Owns(weapon) || (drink != null && !drink.consumed)) {
-            if (HH_Points.Take(player, HH_Settings.Int("hh_drop_weapon_cost"))) {
-                manager.Abandon(weapon);
-                HH_Pickup.TakeFrom(player, weapon);
-                manager.SelectBest();
-            }
+        if (!manager.Owns(weapon) && drink == null) {
+            return;
+        }
+        // the bottle keeps whether it was drunk, so whoever takes an empty one drinks nothing
+        let cost = drink != null && drink.consumed? 0: HH_Settings.Int("hh_drop_weapon_cost");
+        if (HH_Points.Take(player, cost)) {
+            manager.Abandon(weapon);
+            HH_Pickup.TakeFrom(player, weapon);
+            manager.SelectBest();
         }
     }
 }

@@ -29,7 +29,7 @@ class HH_Defaults play {
         settings.Set("hh_kick_enabled", "1");  // the kick key works
         settings.Set("hh_kick_damage", "40");
         settings.Set("hh_hud_before_start", "1");  // the HUD shows before round 1 (a game with an intro turns it off)
-        settings.Set("hh_drop_weapon_cost", "750");  // points to drop a weapon (double tap the drop key)
+        settings.Set("hh_drop_weapon_cost", "2500");  // points to drop a weapon or a full bottle (double tap the drop key); never into debt
         settings.Set("hh_pad_layout", "1");  // offer each player the zombies controller layout, once (controller.zs)
         settings.Set("hh_auto_start", "1");  // start round 1 by itself (a game with an intro turns it off and starts it itself)
         settings.Set("hh_start_delay", "105");  // tics before round 1 when it starts by itself
@@ -56,6 +56,13 @@ class HH_Defaults play {
         settings.Set("hh_box_min_spins", "4");  // spins before the box can move
         settings.Set("hh_box_move_chance", "3");  // after that, it moves 1 time in this many
         settings.Set("hh_box_pickup_time", "350");  // tics to take the weapon
+        settings.Set("hh_box_respin_cost", "1");
+        settings.Set("hh_box_kick_drop_cost", "2500");
+        settings.Set("hh_box_push", "1");
+        settings.Set("hh_roster_reveal_time", "245");
+        settings.Set("hh_roster_page_time", "35");
+        settings.Set("hh_roster_idle_time", "175");
+        settings.Set("hh_unlock_cost", "1500");
         settings.Set("hh_wall_ammo_divisor", "2");  // ammo costs the weapon's cost divided by this
         settings.Set("hh_wall_upgraded_ammo_cost", "4500");
         settings.Set("hh_drops_per_round", "4");

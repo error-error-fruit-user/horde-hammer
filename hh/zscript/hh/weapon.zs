@@ -162,7 +162,7 @@ class HH_Weapon : Weapon {
 // other weapon but melee at 1, unless it is CHEATNOTWEAPON (a mod's variant of another, like Brutal
 // Doom's purist and dual ones).
 class HH_WeaponPool play {
-    static void Gather(PlayerPawn player, out Array<class<Weapon> > weapons, out Array<int> weights) {
+    static void Gather(PlayerPawn player, out Array<class<Weapon> > weapons, out Array<int> weights, bool withUnlocked = true) {
         weapons.Clear();
         weights.Clear();
         if (player == null || player.player == null) {
@@ -189,6 +189,54 @@ class HH_WeaponPool play {
                     weights.Push(weight);
                 }
             }
+        }
+        // and what the player unlocked from the roster and left on
+        if (withUnlocked && manager != null) {
+            foreach (token : manager.unlocked) {
+                let type = HH_InventoryManager.UnlockedType(token);
+                if (type != null && weapons.Find(type) == weapons.Size()) {
+                    weapons.Push(type);
+                    weights.Push(1);
+                }
+            }
+        }
+    }
+
+    // Whether the box can give `type` to `player` at all (whether or not they hold it now)
+    static bool Gives(PlayerPawn player, class<Weapon> type, bool withUnlocked = true) {
+        Array<class<Weapon> > weapons;
+        Array<int> weights;
+        HH_WeaponPool.Gather(player, weapons, weights, withUnlocked);
+        return weapons.Find(type) != weapons.Size();
+    }
+
+    // Every weapon the loaded files have, for the roster: each class not replaced by another and not
+    // a variant (powered up, or CHEATNOTWEAPON: drinks) whose pickup is a sprite from the IWAD or a
+    // file after it. The engine defines every game's weapons; another game's have no sprite here,
+    // or one of the engine's own (before the IWAD), or one that only shares a name (rotated, not
+    // a pickup's single A0).
+    static void Everything(out Array<class<Weapon> > weapons) {
+        weapons.Clear();
+        let firstGameLump = max(0, Wads.FindLump("S_START", 0));
+        foreach (type : AllActorClasses) {
+            let weaponType = (class<Weapon>)(type);
+            if (weaponType == null || weaponType == 'Weapon' || Actor.GetReplacement(weaponType) != weaponType) {
+                continue;
+            }
+            let weapon = GetDefaultByType(weaponType);
+            if (weapon.bCheatNotWeapon || weapon.bPowered_Up) {
+                continue;
+            }
+            let spawn = weapon.SpawnState;
+            if (spawn == null || spawn.sprite == 0) {
+                continue;
+            }
+            let texture = TexMan.GetName(spawn.GetSpriteTexture(0));
+            let lump = Wads.CheckNumForName(texture, Wads.ns_sprites);
+            if (lump < firstGameLump || texture.Left(4) == "TNT1" || texture.Mid(5, 1) != "0") {
+                continue;
+            }
+            weapons.Push(weaponType);
         }
     }
 
