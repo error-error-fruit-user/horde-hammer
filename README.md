@@ -93,7 +93,7 @@ The first time a player presses a controller button, Horde Hammer asks once whet
 | Left stick click | Sprint |
 | Left bumper | Repulse |
 | Right bumper, twice | Drop weapon |
-| D-pad left, up, right | Weapons 1 to 3 |
+| D-pad up, right, left | Weapons 1 to 3 (up the first carried, right the second, left a third when the game allows one) |
 | D-pad down | Equipment (`hh_equipment`) |
 | Start | Pause |
 | Back | Main menu |

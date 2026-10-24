@@ -37,9 +37,9 @@ class HH_ControllerLayout ui {
         "+speed",
         "hh_repulse",
         "weapdrop",                     // twice, to drop the weapon
-        "slot 1",                       // the d-pad goes clockwise from the left
+        "slot 3",                       // the d-pad: up the first weapon carried, right the
+        "slot 1",                       // second, left the third (when a game allows three)
         "slot 2",
-        "slot 3",
         "hh_equipment",
         "pause",
         "menu_main"

@@ -38,7 +38,7 @@ HH_TAG_DOUBLE_TAP = "Double Tap";
 HH_TAG_KEY = "Key";
 
 // Menus
-HH_PAD_LAYOUT_ASK = "Use the zombies controller layout?\n\nRT fire, LT zoom, A use, X reload, Y swap weapon,\nright stick click kick, LB repulse, RB twice drop weapon,\nd-pad weapons 1-4 clockwise from the left,\nleft stick click sprint, Start pause, Back menu.\nThose buttons lose what they did; the rest stay as they are.";
+HH_PAD_LAYOUT_ASK = "Use the zombies controller layout?\n\nRT fire, LT zoom, A use, X reload, Y swap weapon,\nright stick click kick, LB repulse, RB twice drop weapon,\nd-pad up, right and left weapons 1-3, down equipment,\nleft stick click sprint, Start pause, Back menu.\nThose buttons lose what they did; the rest stay as they are.";
 HH_MENU_OPTIONS = "Horde Hammer Options";
 HH_MENU_HUD = "HUD Layout";
 HH_MENU_TOGGLED_ZOOM = "Toggled zoom";
