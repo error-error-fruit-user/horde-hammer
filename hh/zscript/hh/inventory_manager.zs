@@ -19,7 +19,8 @@ class HH_InventoryManager : Inventory {
 
     HH_HudState hud;
     // Weapons unlocked from the box's roster, by class name, "-" in front when turned off; kept in
-    // the player's hh_unlocked so they stay unlocked whenever that class is loaded again
+    // the player's hh_unlocked (noarchive) so they stay unlocked from map to map, but only for the
+    // session: it is never saved
     Array<String> unlocked;
 
     property SwitchDelay: ticsSinceSwitch;
