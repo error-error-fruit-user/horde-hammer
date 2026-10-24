@@ -131,7 +131,7 @@ def plan(args):
     lines.append(f"  - copy it to {os.path.join(args.dir, 'wads', PK3)}, replacing any {PK3} there")
     lines.append("")
     lines.append("To change that, here or after the y: --no-build installs what is published already, "
-                 "--dir says which tdl folder it goes to, and --computer-speak speaks plainly.")
+                 "--dir says which tdl folder it goes to, --reinstall does it all again, and --computer-speak speaks plainly.")
     return lines
 
 
@@ -142,6 +142,9 @@ def parser():
                        help="install what published/releases/ has now, packing nothing")
     flags.add_argument("--dir", default=default_dir(),
                        help="tdl's folder, whose wads/ gets the pk3 (default: %(default)s)")
+    flags.add_argument("--reinstall", action="store_true",
+                       help="build and install everything again, where a run picks up where the last "
+                            "one left off")
     flags.add_argument("--computer-speak", action="store_true",
                        help="say what it does plainly and formally, rather than as a descent through hell")
     return flags
@@ -158,7 +161,12 @@ def main():
     groans.say("begin", "Publishing and installing Horde Hammer", what="Horde Hammer", place=args.dir)
     if not args.no_build:
         groans.section("pack")
-        groans.run([sys.executable, "publish.py"], cwd=HERE, voiced=True)
+        packed = os.path.join(HERE, "published", "releases", PK3)
+        if not args.reinstall and groans.up_to_date([packed], [HERE]):
+            groans.say("skip", f"{PK3} is newer than its sources: nothing to pack (--reinstall packs "
+                       "it again)", what=PK3, place=os.path.dirname(packed))
+        else:
+            groans.run([sys.executable, "publish.py"], cwd=HERE, voiced=True)
     groans.section("install")
     source = os.path.join(HERE, "published", "releases", PK3)
     if not os.path.isfile(source):
@@ -166,6 +174,9 @@ def main():
     wads = os.path.join(args.dir, "wads")
     os.makedirs(wads, exist_ok=True)
     target = os.path.join(wads, PK3)
+    if not args.reinstall and groans.same_file(source, target):
+        groans.say("skip", f"{target} is this {PK3} already", what=PK3, place=wads)
+        return
     shutil.copy2(source, target + ".part")
     os.replace(target + ".part", target)
     groans.say("copy", f"Installed {target}", what=PK3, place=wads)
