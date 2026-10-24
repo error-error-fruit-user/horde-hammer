@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pack the mod folder into a playable .pk3 (a zip with another extension) in published/.
+"""Pack the mod folder into a playable .pk3 (a zip with another extension) in published/releases/.
 
 usage: python3 publish.py [--out FILE] [--strict]
 
@@ -30,7 +30,7 @@ NAME = "horde-hammer.pk3"
 # Copied next to the pk3 and into it under licenses/
 LICENSES = ["LICENSE"]
 
-OUT = "published"
+OUT = os.path.join("published", "releases")
 # 1980-01-01, the earliest time a zip can hold
 EPOCH = (1980, 1, 1, 0, 0, 0)
 

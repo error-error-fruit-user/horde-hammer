@@ -17,7 +17,7 @@ aliases of Doom's, and a game replaces them.
 
 ## Commands
 
-- Pack: `python3 publish.py` → `published/horde-hammer.pk3` (dependency-free, reproducible; warns
+- Pack: `python3 publish.py` → `published/releases/horde-hammer.pk3` (dependency-free, reproducible; warns
   about case collisions, lump names over 8 characters, bad sprite names and SNDINFO entries naming
   missing files; `--strict` fails on them).
 - Generators: `python3 tools/placeholders.py` (placeholder sprites and HUD pictures) and

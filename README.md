@@ -153,7 +153,7 @@ Everything runs in lockstep on every machine, so the library never reads one mac
 
 ## Building and testing
 
-- `python3 publish.py` packs `hh/` into `published/horde-hammer.pk3` (reproducible; warns about lump name problems).
+- `python3 publish.py` packs `hh/` into `published/releases/horde-hammer.pk3` (reproducible; warns about lump name problems).
 - `python3 tools/placeholders.py` redraws the placeholder art, `python3 tools/testmap.py` the test map.
 - `test/` is loaded after the library for testing (never shipped): `test/maps/hhtest.wad` has one of every map thing, `test/ZSCRIPT.zs` adds console network events that drive the game (`netevent hhtest_state`, `hhtest_use:<class>`, `hhtest_down`, `hhtest_killall`), and `test/acs/hhtest.o` listens to events from ACS. Play it with `uzdoom -iwad freedoom2.wad -file hh test +map HHTEST`.
 
