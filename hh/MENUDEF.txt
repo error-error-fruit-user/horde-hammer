@@ -1,6 +1,11 @@
-// Horde Hammer's options: a submenu at the end of the options menu
+// Horde Hammer's options: a submenu at the end of the options menu, the full one and the simple
+// one UZDoom shows instead while m_simpleoptions is on
 
 AddOptionMenu "OptionsMenu" {
+    Submenu "$HH_MENU_OPTIONS", "HH_Options"
+}
+
+AddOptionMenu "OptionsMenuSimple" {
     Submenu "$HH_MENU_OPTIONS", "HH_Options"
 }
 
