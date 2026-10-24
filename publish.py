@@ -21,8 +21,41 @@ import argparse
 import os
 import re
 import shutil
+import subprocess
 import sys
 import zipfile
+
+GROANS_GITHUB = "https://raw.githubusercontent.com/error-error-fruit-user/installation-groans/main/"
+
+
+def load_groans():
+    """installation-groans' groans.py, which these scripts speak through: the project's
+    installation-groans submodule, else the workspace's checkout beside the project, else a copy
+    fetched from its GitHub into published/artifacts/groans/."""
+    project = os.path.dirname(os.path.abspath(__file__))
+    places = [os.path.join(project, "installation-groans"),
+              os.path.join(os.path.dirname(project), "installation-groans"),
+              os.path.join(project, "published", "artifacts", "groans")]
+    folder = next((place for place in places if os.path.isfile(os.path.join(place, "groans.py"))), None)
+    if folder is None:
+        folder = places[-1]
+        try:
+            import urllib.request
+            os.makedirs(folder, exist_ok=True)
+            for name in ("groans.py", "toiling-through-hell.toml", "computer-speak.toml"):
+                with urllib.request.urlopen(GROANS_GITHUB + name, timeout=10) as answer:
+                    with open(os.path.join(folder, name), "wb") as out:
+                        out.write(answer.read())
+        except Exception as error:
+            sys.exit(f"installation-groans isn't beside {os.path.basename(project)}, and couldn't be "
+                     f"fetched ({error}): clone it beside it.")
+    if folder not in sys.path:
+        sys.path.insert(0, folder)
+    import groans
+    return groans
+
+
+groans = load_groans()
 
 # The folder that becomes the root of the pk3, and the name of the pk3
 PACKAGE = "hh"
@@ -141,7 +174,13 @@ def main():
     parser.add_argument("--out", help=f"where to write the pk3 (default: {OUT}/{NAME}, and the "
                         f"licenses next to it); any other path writes only the pk3")
     parser.add_argument("--strict", action="store_true", help="fail on warnings")
+    parser.add_argument("--computer-speak", action="store_true",
+                        help="say what it does plainly and formally, rather than as a descent "
+                             "through hell")
     options = parser.parse_args()
+    groans.start(None, options.computer_speak)
+    groans.say("begin", "Publishing Horde Hammer", what="Horde Hammer", place=os.path.join("published", "releases"))
+    groans.section("pack")
 
     here = os.path.dirname(os.path.abspath(__file__))
     os.chdir(here)
@@ -153,7 +192,7 @@ def main():
 
     found = warnings(files)
     for warning in found:
-        print("warning: " + warning, file=sys.stderr)
+        groans.other("warning: " + warning, sys.stderr)
     if found and options.strict:
         sys.exit(f"{len(found)} warning(s), and --strict was given")
 
@@ -167,9 +206,20 @@ def main():
             shutil.copy(license, OUT)
 
     pack(files, target)
-    size = os.path.getsize(target) / (1024 * 1024)
-    print(f"{target}: {len(files)} files, {size:.1f} MB")
+    groans.built(target, len(files))
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except subprocess.CalledProcessError as error:
+        groans.finish("Horde Hammer", ok=False,
+                      error=f"{' '.join(map(str, error.cmd))} ended with code {error.returncode}")
+        sys.exit(1)
+    except SystemExit as stop:
+        # 🗣️ a reason to stop is said in the voice too
+        if isinstance(stop.code, str):
+            groans.say("problem", stop.code, problem=stop.code)
+            sys.exit(1)
+        raise
+    groans.finish("Horde Hammer")
