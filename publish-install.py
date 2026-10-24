@@ -154,11 +154,14 @@ def main():
     flags = parser()
     args = flags.parse_args()
     groans.start(JOURNAL, args.computer_speak)
+    if as_root():
+        groans.note("run as root: refused")
+        sys.exit("Don't run this with sudo: it installs for you, and root would leave files in "
+                 "published/ and an install that only root can change.")
     args = ask(flags, args, plan)
     if not os.path.isdir(args.dir):
         sys.exit(f"tdl isn't installed in {args.dir}: install it with tdl-install, or give --dir")
     check_owner([os.path.join(HERE, "published")])
-    groans.say("begin", "Publishing and installing Horde Hammer", what="Horde Hammer", place=args.dir)
     if not args.no_build:
         groans.section("pack")
         packed = os.path.join(HERE, "published", "releases", PK3)
