@@ -191,7 +191,7 @@ def agreed(accept):
     if not sys.stdin.isatty():
         note("no one to ask, and no --accept: nothing was done")
         sys.exit("There is no one to ask, so nothing was done: pass --accept to go ahead.")
-    answer = input("Go ahead? [y/N] ").strip()
+    answer = input("Are you sure? [y/N] ").strip()
     note(f"asked to go ahead, the answer was {answer!r}")
     return answer.lower() in ("y", "yes")
 
