@@ -25,6 +25,9 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 PK3 = "horde-hammer.pk3"
 WINDOWS = platform.system() == "Windows"
+WHAT = "Horde Hammer"
+# The installer it runs, which takes --computer-speak too
+INSTALLER = None
 
 
 # The journal: everything this does, with the time since it began (what it plans and is told,
@@ -43,11 +46,94 @@ def note(line):
             journal.write(f"[{time.monotonic() - BEGAN:8.3f}s] {part}\n")
 
 
+# The voice it speaks in, from installation-groans: the workspace's checkout beside this project,
+# else GitHub. Toiling Through Hell unless told --computer-speak; without one (or Python older than
+# 3.11, which can't read TOML), plain lines.
+GROANS = "https://raw.githubusercontent.com/error-error-fruit-user/installation-groans/main/"
+VOICE = {}
+
+
+def speak_in(name):
+    """Speaks in the installation-groans voice `name` (a file name) from now on, if it is found."""
+    global VOICE
+    try:
+        import tomllib
+    except ImportError:
+        return
+    path = os.path.join(os.path.dirname(HERE), "installation-groans", name)
+    try:
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as source:
+                text = source.read()
+        else:
+            import urllib.request
+            with urllib.request.urlopen(GROANS + name, timeout=5) as answer:
+                text = answer.read().decode()
+        VOICE = tomllib.loads(text)
+    except Exception:
+        VOICE = {}
+
+
+def tell(event, plain, **fills):
+    """Says `event` as one of the voice's phrases for it, picked at random and filled from `fills`,
+    or `plain` without one; the journal keeps the plain line either way. Now and then the voice
+    interjects (its [interjection])."""
+    import random
+    phrases = VOICE.get("phrases", {}).get(event) or []
+    if not phrases:
+        print(plain, flush=True)
+        note(plain)
+        return
+    said = random.choice(phrases)
+    for name, value in fills.items():
+        said = said.replace("{" + name + "}", str(value))
+    said = said[:1].upper() + said[1:]
+    print(said, flush=True)
+    note(f"{said}  ({plain})")
+    interjection = VOICE.get("interjection", {})
+    if interjection.get("phrases") and random.random() < float(interjection.get("chance", 0)):
+        colors = {"yellow": 33, "green": 32, "blue": 34, "magenta": 35, "cyan": 36, "white": 37}
+        code = colors.get(interjection.get("color", "red"), 31)
+        shout = random.choice(interjection["phrases"])
+        tty = sys.stdout.isatty() and "NO_COLOR" not in os.environ
+        print(f"\033[1;{code}m{shout}\033[0m" if tty else shout, flush=True)
+        note(shout)
+
+
+def not_mine(folders):
+    """The first file in `folders` (and the folders themselves) owned by someone else, as a run
+    with sudo leaves them; None when every one is this user's."""
+    if WINDOWS:
+        return None
+    for folder in folders:
+        for root, dirs, files in os.walk(folder):
+            for path in [root] + [os.path.join(root, name) for name in dirs + files]:
+                try:
+                    if os.lstat(path).st_uid != os.getuid():
+                        return path
+                except OSError:
+                    pass
+    return None
+
+
+def check_owner(folders):
+    """Stops, saying how to take them back, when anything in `folders` isn't this user's."""
+    if WINDOWS or os.getuid() == 0:
+        return
+    stranger = not_mine(folders)
+    if stranger is not None:
+        import getpass
+        fix = "sudo chown -R " + getpass.getuser() + " " + " ".join(folders)
+        tell("problem", f"{stranger} isn't yours (a run with sudo left it)", problem=f"{stranger} isn't yours")
+        sys.exit(f"Something in published/ belongs to another user, root most likely (a run with sudo "
+                 f"leaves it): nothing can replace it. Take it back with:\n  {fix}")
+
+
 def run(command, cwd=HERE):
     """Runs `command`, its output shown as it comes (prompts included) and written down, with how it
     ended. Raises CalledProcessError if it failed."""
     shown = " ".join(str(part) for part in command)
-    print("+", shown, flush=True)
+    tell("run", f"+ {shown}", command=shown)
     note(f"+ {shown}  (in {cwd})")
     process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     pending, quiet = b"", 0
@@ -132,7 +218,11 @@ def main():
                         help="install what published/releases/ has now, packing nothing")
     parser.add_argument("--dir", default=default_dir(),
                         help="tdl's folder, whose wads/ gets the pk3 (default: %(default)s)")
+    parser.add_argument("--computer-speak", action="store_true",
+                        help="say what it does plainly and formally, rather than as a descent "
+                             "through hell" + (" (and have the installer do the same)" if INSTALLER else ""))
     args = parser.parse_args()
+    speak_in("computer-speak.toml" if args.computer_speak else "toiling-through-hell.toml")
     note(f"=== {os.path.basename(__file__)} {' '.join(sys.argv[1:])} ===")
     if not os.path.isdir(args.dir):
         sys.exit(f"tdl isn't installed in {args.dir}: install it with tdl-install, or give --dir")
@@ -141,6 +231,8 @@ def main():
     if not agreed(args.accept):
         note("not going ahead: nothing was done")
         sys.exit("Nothing was done.")
+    check_owner([folder for folder in (os.path.normpath(os.path.join(HERE, "published")),) if os.path.isdir(folder)])
+    tell("begin", f"Publishing and installing {WHAT}", what=WHAT, place=os.path.join(HERE, "published"))
     if not args.no_build:
         command = [sys.executable, "publish.py"]
         print("+", " ".join(command), flush=True)
@@ -154,7 +246,7 @@ def main():
     shutil.copy2(source, target + ".part")
     os.replace(target + ".part", target)
     note(f"copied {source} to {target}")
-    print("Installed", target)
+    tell("copy", f"Installed {target}", what=os.path.basename(target), place=target)
 
 
 if __name__ == "__main__":
@@ -163,5 +255,8 @@ if __name__ == "__main__":
         note("done")
     except subprocess.CalledProcessError as error:
         note(f"failed: {error}")
-        sys.exit(f"publish-install failed: {error}\nWhat it did is in {JOURNAL}")
-    print(f"What it did is in {JOURNAL}")
+        tell("problem", f"publish-install failed: {error}", problem=error)
+        tell("journal", f"What it did is in {JOURNAL}", place=JOURNAL)
+        sys.exit(1)
+    tell("done", "Done.", what=WHAT)
+    tell("journal", f"What it did is in {JOURNAL}", place=JOURNAL)
