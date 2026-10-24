@@ -16,7 +16,8 @@ class HH_Key : HH_Weapon {
         Tag "$HH_TAG_KEY";
         HH_Weapon.Equipment true;
         HH_Weapon.Counted false;
-        HH_Weapon.BoxWeight 0;
+        HH_Weapon.BoxWeight 0;         // only from the roster, once unlocked...
+        HH_Weapon.RisenWeight 8;       // ...and far likelier while Risen
         +WEAPON.NOALERT
         +WEAPON.MELEEWEAPON
     }

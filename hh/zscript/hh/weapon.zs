@@ -16,6 +16,8 @@ class HH_Weapon : Weapon {
     meta class<Weapon> upgrade; // its upgraded version, which wall buys sell ammo for
     meta bool equipment;        // carried apart from the weapons (hh_max_equipment), on the equipment key
     meta class<Weapon> downed;  // given for the last stand instead, when this is the pistol
+    meta int risenWeight;       // once unlocked from the roster, how often the box picks it while its
+                                // player is Risen (HH_RisenPower), instead of 1; 0 for no difference
 
     property ActiveAmmo: activeAmmo;
     property ReloadFrameRate: reloadFrameRate;
@@ -27,6 +29,7 @@ class HH_Weapon : Weapon {
     property Upgrade: upgrade;
     property Equipment: equipment;
     property Downed: downed;
+    property RisenWeight: risenWeight;
 
     Default {
         HH_Weapon.Counted true;
@@ -194,13 +197,19 @@ class HH_WeaponPool play {
                 }
             }
         }
-        // and what the player unlocked from the roster and left on
+        // and what the player unlocked from the roster and left on, some more often while Risen
         if (withUnlocked && manager != null) {
+            let risen = player.FindInventory('HH_RisenPower') != null;
             foreach (token : manager.unlocked) {
                 let type = HH_InventoryManager.UnlockedType(token);
                 if (type != null && weapons.Find(type) == weapons.Size()) {
+                    let weight = 1;
+                    let zombiesWeapon = (class<HH_Weapon>)(type);
+                    if (risen && zombiesWeapon != null && GetDefaultByType(zombiesWeapon).risenWeight > 0) {
+                        weight = GetDefaultByType(zombiesWeapon).risenWeight;
+                    }
                     weapons.Push(type);
-                    weights.Push(1);
+                    weights.Push(weight);
                 }
             }
         }
