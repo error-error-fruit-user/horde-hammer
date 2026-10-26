@@ -68,6 +68,7 @@ class HH_Defaults play {
         settings.Set("hh_roster_reveal_time", "245");
         settings.Set("hh_roster_page_time", "35");
         settings.Set("hh_roster_idle_time", "175");
+        settings.Set("hh_roster_hold_time", "525");
         settings.Set("hh_unlock_cost", "1500");
         settings.Set("hh_wall_ammo_divisor", "2");  // ammo costs the weapon's cost divided by this
         settings.Set("hh_wall_upgraded_ammo_cost", "4500");

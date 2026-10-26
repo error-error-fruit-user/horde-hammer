@@ -572,10 +572,11 @@ class HH_InventoryManager : Inventory {
         }
     }
 
-    // The weapon an unlocked entry names, when it is on and that class is loaded
+    // The weapon an unlocked entry names, when that class is loaded. Unlocks can't be turned off:
+    // one saved off before ("-" first) is on
     static class<Weapon> UnlockedType(String token) {
         if (token.Left(1) == "-") {
-            return null;
+            token = token.Mid(1);
         }
         return (class<Weapon>)(token);
     }
@@ -603,16 +604,6 @@ class HH_InventoryManager : Inventory {
             self.unlocked.Push(type.GetClassName());
             self.SaveUnlocked();
         }
-    }
-
-    void ToggleUnlocked(class<Weapon> type) {
-        let index = self.UnlockIndex(type);
-        if (index < 0) {
-            return;
-        }
-        let entry = self.unlocked[index];
-        self.unlocked[index] = entry.Left(1) == "-"? entry.Mid(1): "-"..entry;
-        self.SaveUnlocked();
     }
 
     // Only the player's own machine can write their CVar: it is told, and keeps it

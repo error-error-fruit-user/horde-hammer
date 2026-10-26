@@ -67,6 +67,7 @@ server int hh_box_push = -1;
 server int hh_roster_reveal_time = -1;
 server int hh_roster_page_time = -1;
 server int hh_roster_idle_time = -1;
+server int hh_roster_hold_time = -1;
 server int hh_unlock_cost = -1;
 
 // Wall buys

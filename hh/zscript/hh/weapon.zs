@@ -197,7 +197,7 @@ class HH_WeaponPool play {
                 }
             }
         }
-        // and what the player unlocked from the roster and left on, some more often while Risen
+        // and what the player unlocked from the roster, some more often while Risen
         if (withUnlocked && manager != null) {
             let risen = player.FindInventory('HH_RisenPower') != null;
             foreach (token : manager.unlocked) {

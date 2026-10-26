@@ -629,10 +629,11 @@ class HH_MysteryBoxHandler : EventHandler {
 
 // The box's roster: every weapon the loaded files have, one at a time over the box, its name on
 // the HUD of whoever bumps the box, as its cost is (blinking red when the box can't give it to them). It pages by itself;
-// whoever opened it pages it with Use (crouched, backwards) and kicks the shown weapon to unlock
-// it for hh_unlock_cost, or to turn an unlocked one off and on again (HH_InventoryManager keeps
+// whoever opened it pages it with Use (crouched, backwards), which stops it paging by itself, and
+// kicks the shown weapon to unlock it for hh_unlock_cost, for good (HH_InventoryManager keeps
 // unlocks in the player's hh_unlocked). It closes once it has shown every weapon and nobody has
-// bumped or used it for hh_roster_idle_time. An opener who walks away or goes down lets it go:
+// bumped or used it for hh_roster_idle_time, or, once paged by hand, hh_roster_hold_time after the
+// last page or kick. An opener who walks away or goes down lets it go:
 // the next player to use it takes it over.
 class HH_MysteryBoxRoster : Actor {
     const HOLD_RANGE = 384;     // how far its opener can go and keep it
@@ -644,6 +645,8 @@ class HH_MysteryBoxRoster : Actor {
     int pageTics;
     int pagesShown;
     int idleTics;
+    bool held;                  // paged by hand: it pages no more by itself
+    int heldTics;               // since the last page or kick, once held
 
     Default {
         +NOGRAVITY
@@ -710,10 +713,12 @@ class HH_MysteryBoxRoster : Actor {
         self.Page(back? -1: 1);
         self.idleTics = 0;
         self.pageTics = 0;
+        self.held = true;
+        self.heldTics = 0;
         player.A_StartSound("hh/box_open", CHAN_AUTO, volume: 0.3);
     }
 
-    // The kick: unlock what the box can't give, or turn an unlocked weapon off or on again
+    // The kick: unlock what the box can't give; an unlocked weapon stays unlocked
     void Kicked(PlayerPawn player) {
         let manager = HH_InventoryManager.Of(player);
         let shown = self.Shown();
@@ -721,10 +726,8 @@ class HH_MysteryBoxRoster : Actor {
             return;
         }
         self.idleTics = 0;
-        if (manager.IsUnlocked(shown)) {
-            manager.ToggleUnlocked(shown);
-            player.A_StartSound("hh/purchase", CHAN_AUTO);
-        } else if (HH_WeaponPool.Gives(player, shown, false)) {
+        self.heldTics = 0;
+        if (manager.IsUnlocked(shown) || HH_WeaponPool.Gives(player, shown, false)) {
             player.A_StartSound("hh/denied", CHAN_AUTO);
         } else if (HH_Points.Take(player, HH_Settings.Int("hh_unlock_cost"))) {
             manager.Unlock(shown);
@@ -754,13 +757,17 @@ class HH_MysteryBoxRoster : Actor {
         }
 
         ++self.idleTics;
-        // it pages by itself while nobody is paging it
-        if (self.idleTics >= HH_Settings.Int("hh_roster_page_time") && ++self.pageTics >= HH_Settings.Int("hh_roster_page_time")) {
+        ++self.heldTics;
+        // it pages by itself while nobody is paging it, and never again once paged by hand
+        if (!self.held && self.idleTics >= HH_Settings.Int("hh_roster_page_time") && ++self.pageTics >= HH_Settings.Int("hh_roster_page_time")) {
             self.pageTics = 0;
             ++self.pagesShown;
             self.Page(1);
         }
-        if (self.pagesShown >= self.weapons.Size() && self.idleTics >= HH_Settings.Int("hh_roster_idle_time")) {
+        let done = self.held
+            ? self.heldTics >= HH_Settings.Int("hh_roster_hold_time")
+            : self.pagesShown >= self.weapons.Size() && self.idleTics >= HH_Settings.Int("hh_roster_idle_time");
+        if (done) {
             let box = self.box;
             box.roster = null;
             self.Destroy();
