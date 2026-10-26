@@ -22,7 +22,7 @@ class HH_HudState play {
     String hintArgument;
     int hintTics;
     double revive;
-    String rosterName;          // the weapon the box's roster shows, while it is near
+    String rosterName;          // the weapon the box's roster shows, while they bump the box
     bool rosterGives;           // whether the box can give it to this player
     int rosterTics;
 
@@ -51,7 +51,7 @@ class HH_HudState play {
     void SetRoster(String name, bool gives) {
         self.rosterName = name;
         self.rosterGives = gives;
-        self.rosterTics = 2;
+        self.rosterTics = HH_HudState.HINT_TICS;
     }
 
     void SetRevive(double fraction) {

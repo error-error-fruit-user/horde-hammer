@@ -628,14 +628,13 @@ class HH_MysteryBoxHandler : EventHandler {
 }
 
 // The box's roster: every weapon the loaded files have, one at a time over the box, its name on
-// the HUD of everyone near (blinking red when the box can't give it to them). It pages by itself;
+// the HUD of whoever bumps the box, as its cost is (blinking red when the box can't give it to them). It pages by itself;
 // whoever opened it pages it with Use (crouched, backwards) and kicks the shown weapon to unlock
 // it for hh_unlock_cost, or to turn an unlocked one off and on again (HH_InventoryManager keeps
 // unlocks in the player's hh_unlocked). It closes once it has shown every weapon and nobody has
 // bumped or used it for hh_roster_idle_time. An opener who walks away or goes down lets it go:
 // the next player to use it takes it over.
 class HH_MysteryBoxRoster : Actor {
-    const SEEN_RANGE = 512;     // how near the HUD shows the name
     const HOLD_RANGE = 384;     // how far its opener can go and keep it
 
     HH_MysteryBox box;
@@ -691,6 +690,12 @@ class HH_MysteryBoxRoster : Actor {
     void Bump(PlayerPawn player) {
         if (self.Controls(player)) {
             self.idleTics = 0;
+        }
+        // the shown weapon's name on their HUD, as the box shows its cost to whoever bumps it
+        let manager = HH_InventoryManager.Of(player);
+        let shown = self.Shown();
+        if (manager != null && manager.IsActive() && shown != null) {
+            manager.hud.SetRoster(GetDefaultByType(shown).GetTag(), HH_WeaponPool.Gives(player, shown));
         }
     }
 
@@ -761,18 +766,6 @@ class HH_MysteryBoxRoster : Actor {
             self.Destroy();
             box.Close();
             return;
-        }
-
-        let shown = self.Shown();
-        for (let i = 0; i < MAXPLAYERS; ++i) {
-            if (!HH_Util.InGame(i)) {
-                continue;
-            }
-            let pawn = players[i].mo;
-            let viewer = HH_InventoryManager.Of(pawn);
-            if (viewer != null && viewer.IsActive() && pawn.Distance3D(self) <= HH_MysteryBoxRoster.SEEN_RANGE) {
-                viewer.hud.SetRoster(GetDefaultByType(shown).GetTag(), HH_WeaponPool.Gives(pawn, shown));
-            }
         }
     }
 
