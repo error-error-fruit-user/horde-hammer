@@ -63,9 +63,9 @@ class HHTest_Handler : EventHandler {
             }
             Console.Printf("test: zombies %s", kinds);
         } else if (e.Name == 'hhtest_kick') {
-            let kick = HH_KickItem(player.FindInventory('HH_KickItem'));
+            let kick = HH_KickItem(player.FindInventory('HH_KickItem', true));
             let layer = player.player.FindPSprite(HH_KickItem.LAYER);
-            Console.Printf("test: kick item %d cooldown %d layer %d enabled %d", kick != null, kick != null? kick.cooldown: -1, layer != null, HH_Settings.Bool("hh_kick_enabled"));
+            Console.Printf("test: kick item %d (%s) cooldown %d layer %d enabled %d", kick != null, kick != null? kick.GetClassName(): 'None', kick != null? kick.cooldown: -1, layer != null, HH_Settings.Bool("hh_kick_enabled"));
         } else if (e.Name == 'hhtest_repulse_wait') {
             Console.Printf("phase %d", HH_Rounds.Get().phase);
         }

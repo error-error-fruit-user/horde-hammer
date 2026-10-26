@@ -42,7 +42,8 @@ class HH_Players : EventHandler {
         pawn.GiveInventory('HH_InventoryManager', 1);
         pawn.GiveInventory('HH_Regen', 1);
         pawn.GiveInventory('HH_PickupDropper', 1);
-        pawn.GiveInventory('HH_KickItem', 1);
+        // a game's own kick, when it has one that replaces HH_KickItem
+        pawn.GiveInventory((class<Inventory>)(Actor.GetReplacement('HH_KickItem')), 1);
     }
 
     override void PlayerEntered(PlayerEvent e) {
