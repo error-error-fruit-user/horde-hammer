@@ -141,7 +141,8 @@ class HH_HudHandler : EventHandler {
     }
 
     override void InterfaceProcess(ConsoleEvent e) {
-        // this player's roster unlocks, kept in their own config (HH_InventoryManager.SaveUnlocked)
+        // this player's roster unlocks, in their own hh_unlocked for the session, never saved
+        // (HH_InventoryManager.SaveUnlocked)
         if (e.Name.Left(12) == "hh_unlocked:") {
             let saved = CVar.FindCVar("hh_unlocked");
             if (saved != null) {

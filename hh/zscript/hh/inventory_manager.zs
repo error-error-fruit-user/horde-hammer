@@ -18,7 +18,8 @@ class HH_InventoryManager : Inventory {
     bool skipPickup;                    // giving a weapon that shouldn't count (last stand)
 
     HH_HudState hud;
-    // Weapons unlocked from the box's roster, by class name, "-" in front when turned off; kept in
+    // Weapons unlocked from the box's roster, by class name (a "-" in front, from when they could
+    // be turned off, is read as on); kept in
     // the player's hh_unlocked (noarchive) so they stay unlocked from map to map, but only for the
     // session: it is never saved
     Array<String> unlocked;
