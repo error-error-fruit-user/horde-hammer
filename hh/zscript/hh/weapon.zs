@@ -112,7 +112,7 @@ class HH_Weapon : Weapon {
 
     action Actor, Actor ShootProjectile(class<Actor> projectile) {
         invoker.activeAmmo = max(0, invoker.activeAmmo - invoker.Default.ammoUse1);
-        Actor missile, target;
+        Actor missile = null, target = null;
         [missile, target] = A_FireProjectile(projectile, useAmmo: false);
         return missile, target;
     }

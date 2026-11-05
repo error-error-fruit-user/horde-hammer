@@ -103,8 +103,9 @@ class HH_MysteryBox : HH_Interactable {
         self.SetStateLabel("Close");
     }
 
-    // Hits: the kick does what the box is doing allows; a shot from a player marks the side it
-    // hit; explosions and projectiles knock the box. Nothing hurts it.
+    // Hits: every melee hit is a kick, which does what the box is doing allows and never moves it;
+    // a shot from a player marks the side it hit; explosions and projectiles knock the box.
+    // Nothing hurts it.
     override int DamageMobj(Actor inflictor, Actor source, int damage, Name mod, int flags, double angle) {
         let player = PlayerPawn(source);
         let at = inflictor != null? inflictor.pos: source != null? source.pos: self.pos;
@@ -127,18 +128,26 @@ class HH_MysteryBox : HH_Interactable {
     }
 
     // Whether a hit is melee: the kick, any weapon's melee damage (the fist, the chainsaw, knives),
-    // a mod's own kick or punch, or a close hit from a melee weapon in hand
+    // a mod's own kick or punch, or a hit from a melee weapon in hand (IsMelee). Mods swing with
+    // short, fast missiles too (Project Brutality's fists, kicks, axe and saw): a missile is melee
+    // when it hits close to whoever swung it; one thrown further (a thrown axe) is a projectile.
     static bool IsMelee(PlayerPawn player, Actor inflictor, Name mod) {
-        if (inflictor != null && inflictor.bMissile) {
+        if (inflictor != null && inflictor != player && player.Distance2D(inflictor) > HH_MysteryBox.MELEE_REACH) {
             return false;
         }
         String kind = mod;
         kind = kind.MakeLower();
-        if (kind.IndexOf("kick") >= 0 || kind.IndexOf("melee") >= 0 || kind.IndexOf("punch") >= 0 || kind.IndexOf("fist") >= 0) {
-            return true;
+        static const String MELEE_WORDS[] = {
+            "kick", "melee", "punch", "fist", "saw", "cut", "knife", "axe", "blade", "slash", "stab",
+            "bash", "chop", "sword", "claw", "bayonet", "berserk"
+        };
+        for (let i = 0; i < MELEE_WORDS.Size(); ++i) {
+            if (kind.IndexOf(MELEE_WORDS[i]) >= 0) {
+                return true;
+            }
         }
         let weapon = player.player != null? player.player.ReadyWeapon: null;
-        return weapon != null && weapon.bMeleeWeapon && (inflictor == null || player.Distance2D(inflictor) <= HH_MysteryBox.MELEE_REACH);
+        return weapon != null && HH_InventoryManager.IsMelee(weapon.GetClass());
     }
 
     // Which side of the box a point is on, as the box faces: below 0 its left, above its right

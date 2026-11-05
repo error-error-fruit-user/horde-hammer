@@ -51,7 +51,17 @@ class HH_InventoryManager : Inventory {
         if (zombiesWeapon != null) {
             return GetDefaultByType(zombiesWeapon).counted && !GetDefaultByType(zombiesWeapon).equipment;
         }
-        return GetDefaultByType(type).ammoType1 != null;
+        return !HH_InventoryManager.IsMelee(type);
+    }
+
+    // Whether a weapon is melee: one without ammo (the fist, a knife), or one the engine is told is
+    // (MELEEWEAPON), whatever ammo it has: Project Brutality's chainsaw runs on fuel
+    static bool IsMelee(class<Weapon> type) {
+        if (type == null) {
+            return false;
+        }
+        let weapon = GetDefaultByType(type);
+        return weapon.ammoType1 == null || weapon.bMeleeWeapon;
     }
 
     // The weapon the player holds that is `type` as far as they can tell: that class, one derived
@@ -75,8 +85,8 @@ class HH_InventoryManager : Inventory {
         return null;
     }
 
-    // Equipment: what a weapon says is (grenades, keys...), and every melee weapon (a weapon
-    // without ammo: the fist, a knife)
+    // Equipment: what a weapon says is (grenades, keys...), and every melee weapon (IsMelee: the
+    // fist, a knife, a mod's chainsaw)
     static bool IsEquipment(class<Weapon> type) {
         if (type == null || type is 'HH_Drink') {
             return false;
@@ -85,7 +95,7 @@ class HH_InventoryManager : Inventory {
         if (zombiesWeapon != null && GetDefaultByType(zombiesWeapon).equipment) {
             return true;
         }
-        if (GetDefaultByType(type).ammoType1 != null) {
+        if (!HH_InventoryManager.IsMelee(type)) {
             return false;
         }
         return zombiesWeapon == null || !GetDefaultByType(zombiesWeapon).counted;
@@ -162,7 +172,7 @@ class HH_InventoryManager : Inventory {
     }
 
     // Finds the weapons the player started with: the first counted one is the starting weapon,
-    // one without ammo is melee
+    // the first melee one is melee
     void Scan() {
         self.scanned = true;
         self.weapons.Clear();
@@ -175,7 +185,7 @@ class HH_InventoryManager : Inventory {
             if (HH_InventoryManager.IsEquipment(weapon.GetClass())) {
                 self.equipment.Push(weapon);
                 // melee is equipment, but the first is also what a player with no weapons holds
-                if (self.melee == null && weapon.ammoType1 == null) {
+                if (self.melee == null && HH_InventoryManager.IsMelee(weapon.GetClass())) {
                     self.melee = weapon.GetClass();
                 }
             } else if (HH_InventoryManager.Counts(weapon.GetClass())) {
@@ -413,16 +423,18 @@ class HH_InventoryManager : Inventory {
 
     // Whether a weapon has anything to fire: no ammo type, its reserve, or its magazine
     bool HasAmmo(Weapon weapon) {
-        if (weapon.ammoType1 == null || self.owner.CountInv(weapon.ammoType1) > 0) {
+        if (weapon.ammoType1 == null || weapon.bAmmo_Optional || self.owner.CountInv(weapon.ammoType1) > 0) {
             return true;
         }
         let zombiesWeapon = HH_Weapon(weapon);
         return zombiesWeapon != null && zombiesWeapon.activeAmmo > 0;
     }
 
-    // Equipment that can come up: thrown things need something left to throw
+    // Equipment that can come up: thrown things need something left to throw; melee whose ammo is
+    // optional (a chainsaw out of fuel) still swings
     bool Usable(Weapon weapon) {
-        return weapon != null && (weapon.ammoType1 == null || self.owner.CountInv(weapon.ammoType1) > 0);
+        return weapon != null && (weapon.ammoType1 == null || weapon.bAmmo_Optional
+            || (weapon.bMeleeWeapon && weapon.ammoUse1 <= 0) || self.owner.CountInv(weapon.ammoType1) > 0);
     }
 
     // The equipment key: from the weapons to the equipment last held (or the first usable), and back

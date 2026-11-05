@@ -27,7 +27,7 @@ class HH_Key : HH_Weapon {
         let player = PlayerPawn(self);
         if (invoker.door != 0 && player != null) {
             let doors = level.CreateActorIterator(invoker.door, 'HH_Door');
-            Actor found;
+            Actor found = null;
             while (found = doors.Next()) {
                 let door = HH_Door(found);
                 if (door != null && self.Distance2D(door) <= HH_Key.RANGE + door.radius) {
