@@ -93,7 +93,7 @@ The first time a player presses a controller button, Horde Hammer asks once whet
 | Left stick click | Sprint |
 | Left bumper | Repulse |
 | Right bumper, twice | Drop weapon |
-| D-pad up, right, left | Weapons 1 to 3 (up the first carried, right the second, left a third when the game allows one) |
+| D-pad up, right, left | Weapons 1 to 3 (up the first carried, right the second, left a third when the game allows one); left (and the 3 key) swaps to the alternate ammo type of the weapon in hand and back, when it has one |
 | D-pad down | Equipment (`hh_equipment`) |
 | Start | Pause |
 | Back | Main menu |
@@ -117,6 +117,7 @@ Horde Hammer has no guns. A game's weapons subclass `HH_Weapon`, which adds a ma
 | `HH_Weapon.LastStand` | Going down pulls out the held weapon with the highest value (0 for never) |
 | `HH_Weapon.Upgrade` | Its upgraded version, which wall buys sell ammo for |
 | `HH_Weapon.RoundAmmo` | Reserve ammo its carriers get at the start of every round after the first, up to the most carried (World at War's two grenades a round) |
+| `HH_Weapon.Alternate` | Its alternate ammo type: another weapon, the same gun firing something else (the M1 Garand's rifle grenades). It comes with the weapon and goes with it, wall buys and Max Ammo fill it too, and slot 3 (the 3 key, the d-pad's left) swaps to it and back instead of bringing up a third weapon. The alternate itself has `HH_Weapon.Counted false` and no box weight. |
 
 Last stand and Max Ammo find weapons by these properties, so there is no list to edit. The box searches the player's own weapon slots (their class's `Player.WeaponSlot`, and any weapon's `Weapon.SlotNumber`), so every player class gets its own roster, a mod's included (Brutal Doom, Project Brutality): an `HH_Weapon` comes as often as its box weight, any other weapon but melee at 1, unless it is `CHEATNOTWEAPON` (a mod's variant of another, like Brutal Doom's purist and dual ones). A packaged weapon that should come from the box needs a slot. The box, wall buys and weapons lying on the floor never give a weapon the player already holds: the same class, one derived from it or one it derives from, or its upgrade.
 

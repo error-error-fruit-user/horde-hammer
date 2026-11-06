@@ -43,8 +43,14 @@ class HH_WallBuy : HH_Interactable {
         return upgraded != null && held == upgraded? HH_Settings.Int("hh_wall_upgraded_ammo_cost"): self.AmmoCost();
     }
 
+    // Full when the weapon's reserve is, and its alternate ammo type's (HH_Weapon.Alternate)
     static bool AmmoIsFull(Actor player, class<Weapon> type) {
-        let ammoType = GetDefaultByType(type).ammoType1;
+        let alternate = HH_InventoryManager.AlternateOf(type);
+        return HH_WallBuy.IsFull(player, GetDefaultByType(type).ammoType1)
+            && (alternate == null || HH_WallBuy.IsFull(player, GetDefaultByType(alternate).ammoType1));
+    }
+
+    static bool IsFull(Actor player, class<Ammo> ammoType) {
         if (ammoType == null) {
             return true;
         }
@@ -77,6 +83,10 @@ class HH_WallBuy : HH_Interactable {
                 return false;
             }
             manager.FillAmmo(GetDefaultByType(held).ammoType1);
+            let alternate = HH_InventoryManager.AlternateOf(held);
+            if (alternate != null) {
+                manager.FillAmmo(GetDefaultByType(alternate).ammoType1);
+            }
         } else {
             if (!HH_Points.Take(player, self.CurrentCost())) {
                 player.A_StartSound("hh/denied", CHAN_AUTO);

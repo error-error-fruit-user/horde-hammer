@@ -38,7 +38,8 @@ class HH_ControllerLayout ui {
         "hh_repulse",
         "weapdrop",                     // twice, to drop the weapon
         "slot 3",                       // the d-pad: up the first weapon carried, right the
-        "slot 1",                       // second, left the third (when a game allows three)
+        "slot 1",                       // second, left the alternate ammo type of the one in hand
+                                        // (HH_Weapon.Alternate), else the third (when a game allows three)
         "slot 2",
         "hh_equipment",
         "pause",

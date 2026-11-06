@@ -142,7 +142,8 @@ class HH_PickupDropper : Inventory {
         if (player == null || manager == null || player.player.ReadyWeapon == null) {
             return;
         }
-        let weapon = player.player.ReadyWeapon;
+        // an alternate ammo type in hand drops its weapon (which takes it along)
+        let weapon = manager.BaseOf(player.player.ReadyWeapon);
         let drink = HH_Drink(weapon);
         if (!manager.Owns(weapon) && drink == null) {
             return;

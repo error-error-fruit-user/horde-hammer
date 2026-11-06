@@ -10,6 +10,7 @@ class HH_InventoryManager : Inventory {
     Array<class<HH_Perk> > perks;
     Array<Weapon> weapons;              // the weapons that count against hh_max_weapons, in slot order
     Array<Weapon> equipment;            // equipment (hh_max_equipment), in the order it came
+    Array<Weapon> alternates;           // the carried weapons' alternate ammo types (HH_Weapon.Alternate)
     class<Weapon> lastWeapon, lastEquipment;    // what the equipment key goes back to
     int risenRound;                     // the round this player last rose (HH_Risen)
     class<Weapon> given;                // a weapon just given, brought up on the next tic
@@ -106,6 +107,12 @@ class HH_InventoryManager : Inventory {
         return zombiesWeapon != null? GetDefaultByType(zombiesWeapon).upgrade: null;
     }
 
+    // Its alternate ammo type (HH_Weapon.Alternate), or null
+    static class<Weapon> AlternateOf(class<Weapon> type) {
+        let zombiesWeapon = (class<HH_Weapon>)(type);
+        return zombiesWeapon != null? GetDefaultByType(zombiesWeapon).alternate: null;
+    }
+
     // One class is the other or derives from it
     static bool Related(class<Weapon> one, class<Weapon> other) {
         for (Class<Object> parent = one; parent != null; parent = parent.GetParentClass()) {
@@ -156,6 +163,9 @@ class HH_InventoryManager : Inventory {
         if (!self.scanned && self.owner.player != null && self.owner.player.ReadyWeapon != null) {
             self.Scan();
         }
+        if (self.scanned) {
+            self.KeepAlternates();
+        }
         for (let i = self.equipment.Size() - 1; i >= 0; --i) {
             if (self.equipment[i] == null || self.equipment[i].owner != self.owner) {
                 self.equipment.Delete(i);
@@ -165,7 +175,7 @@ class HH_InventoryManager : Inventory {
         let ready = self.owner.player != null? self.owner.player.ReadyWeapon: null;
         if (ready != null && self.equipment.Find(ready) != self.equipment.Size()) {
             self.lastEquipment = ready.GetClass();
-        } else if (ready != null && (self.Owns(ready) || ready.GetClass() == self.melee)) {
+        } else if (ready != null && (self.Owns(ready) || self.IsAlternate(ready) || ready.GetClass() == self.melee)) {
             self.lastWeapon = ready.GetClass();
         }
         self.hud.Update();
@@ -248,14 +258,15 @@ class HH_InventoryManager : Inventory {
     }
 
     // Throws away the weapon in hand (or the one coming up) to make room for a new one
-    // (the one in hand, else the one coming up, else the one held last, else the newest)
+    // (the one in hand, else the one coming up, else the one held last, else the newest); an
+    // alternate ammo type stands for its weapon
     void DropCurrent() {
-        let current = self.owner.player.ReadyWeapon;
+        let current = self.BaseOf(self.owner.player.ReadyWeapon);
         if (current == null || !self.Owns(current)) {
-            current = self.owner.player.PendingWeapon;
+            current = self.BaseOf(self.owner.player.PendingWeapon);
         }
         if ((current == null || current == WP_NOCHANGE || !self.Owns(current)) && self.lastWeapon != null) {
-            current = Weapon(self.owner.FindInventory(self.lastWeapon));
+            current = self.BaseOf(Weapon(self.owner.FindInventory(self.lastWeapon)));
         }
         if (current == null || current == WP_NOCHANGE || !self.Owns(current)) {
             current = self.weapons[self.weapons.Size() - 1];
@@ -277,6 +288,97 @@ class HH_InventoryManager : Inventory {
             self.owner.SetInventory(ammo, 0);
         }
         traded.Destroy();
+    }
+
+    // Whether a weapon is the alternate ammo type of one the player carries
+    bool IsAlternate(Weapon weapon) {
+        return weapon != null && self.alternates.Find(weapon) != self.alternates.Size();
+    }
+
+    // The weapon an alternate ammo type belongs to; any other weapon is itself
+    Weapon BaseOf(Weapon weapon) {
+        if (!self.IsAlternate(weapon)) {
+            return weapon;
+        }
+        foreach (carried : self.weapons) {
+            if (carried != null && HH_InventoryManager.AlternateOf(carried.GetClass()) == weapon.GetClass()) {
+                return carried;
+            }
+        }
+        return weapon;
+    }
+
+    // The alternate ammo type the player has for a carried weapon, or null
+    Weapon AlternateFor(Weapon weapon) {
+        let type = weapon != null? HH_InventoryManager.AlternateOf(weapon.GetClass()): null;
+        let alternate = type != null? Weapon(self.owner.FindInventory(type)): null;
+        return self.IsAlternate(alternate)? alternate: null;
+    }
+
+    // Every carried weapon's alternate ammo type comes with it, and goes with it (with its ammo,
+    // unless another weapon uses that); one in hand when its weapon goes gives way to the best
+    void KeepAlternates() {
+        for (let i = self.alternates.Size() - 1; i >= 0; --i) {
+            let alternate = self.alternates[i];
+            if (alternate == null || alternate.owner != self.owner) {
+                self.alternates.Delete(i);
+                continue;
+            }
+            let kept = false;
+            foreach (carried : self.weapons) {
+                if (carried != null && HH_InventoryManager.AlternateOf(carried.GetClass()) == alternate.GetClass()) {
+                    kept = true;
+                }
+            }
+            if (!kept) {
+                // in hand with nothing coming up (a weapon just given is), the best comes up
+                let player = self.owner.player;
+                let bare = player != null && player.ReadyWeapon == alternate
+                    && (player.PendingWeapon == WP_NOCHANGE || player.PendingWeapon == null);
+                self.alternates.Delete(i);
+                self.TradeIn(alternate);
+                if (bare && self.IsActive() && self.switchWeapon) {
+                    self.SelectBest();
+                }
+            }
+        }
+        foreach (carried : self.weapons) {
+            let type = carried != null? HH_InventoryManager.AlternateOf(carried.GetClass()): null;
+            if (type == null) {
+                continue;
+            }
+            let alternate = Weapon(self.owner.FindInventory(type));
+            if (alternate == null) {
+                self.skipPickup = true;
+                self.owner.GiveInventory(type, 1);
+                self.skipPickup = false;
+                alternate = Weapon(self.owner.FindInventory(type));
+                let zombiesWeapon = HH_Weapon(alternate);
+                if (zombiesWeapon != null) {
+                    if (self.fastReload) {
+                        zombiesWeapon.ActivateFastReload();
+                    }
+                    if (self.doubleFire) {
+                        zombiesWeapon.ActivateDoubleFire();
+                    }
+                }
+            }
+            if (alternate != null && !self.IsAlternate(alternate)) {
+                self.alternates.Push(alternate);
+            }
+        }
+    }
+
+    // Slot 3 with a weapon in hand that has an alternate ammo type: over to it, or back
+    bool SwapAlternate() {
+        let ready = self.owner.player != null? self.owner.player.ReadyWeapon: null;
+        let base = self.BaseOf(ready);
+        let alternate = self.AlternateFor(base);
+        if (ready == null || alternate == null) {
+            return false;
+        }
+        self.owner.A_SelectWeapon(ready == alternate? base.GetClass(): alternate.GetClass());
+        return true;
     }
 
     override void ModifyDamage(int damage, Name damageType, out int newDamage, bool passive, Actor inflictor, Actor source, int flags) {
@@ -339,6 +441,7 @@ class HH_InventoryManager : Inventory {
         self.owner.ClearInventory();
         self.weapons.Clear();
         self.equipment.Clear();
+        self.alternates.Clear();
         self.perks.Clear();
         self.fastReload = false;
         self.doubleFire = false;
@@ -499,18 +602,23 @@ class HH_InventoryManager : Inventory {
         if (count == 0) {
             return;
         }
-        let index = self.weapons.Find(self.owner.player.ReadyWeapon);
+        let index = self.weapons.Find(self.BaseOf(self.owner.player.ReadyWeapon));
         let next = index == count? (step > 0? 0: count - 1): ((index + step) % count + count) % count;
         self.owner.A_SelectWeapon(self.weapons[next].GetClass());
     }
 
     // Slot 1 is the first carried weapon, slot 2 the second...; slot 0 (the 0 key) brings up the
     // equipment, like the equipment key. With the equipment in hand, slot 1 is its first piece...
+    // Slot 3 (the d-pad's left) swaps to the alternate ammo type of the weapon in hand and back,
+    // when it has one, instead of a third weapon.
     void SelectWeapon(int slot) {
         if (self.InEquipment()) {
             if (slot >= 1 && slot <= self.equipment.Size() && self.Usable(self.equipment[slot - 1])) {
                 self.owner.A_SelectWeapon(self.equipment[slot - 1].GetClass());
             }
+            return;
+        }
+        if (slot == 3 && self.SwapAlternate()) {
             return;
         }
         if (slot == 0) {
@@ -561,7 +669,10 @@ class HH_InventoryManager : Inventory {
 
     void SetFastReload(bool on) {
         self.fastReload = on;
-        foreach (weapon : self.weapons) {
+        Array<Weapon> sped;
+        sped.Copy(self.weapons);
+        sped.Append(self.alternates);
+        foreach (weapon : sped) {
             let zombiesWeapon = HH_Weapon(weapon);
             if (zombiesWeapon != null) {
                 if (on) {
@@ -575,7 +686,10 @@ class HH_InventoryManager : Inventory {
 
     void SetDoubleFire(bool on) {
         self.doubleFire = on;
-        foreach (weapon : self.weapons) {
+        Array<Weapon> sped;
+        sped.Copy(self.weapons);
+        sped.Append(self.alternates);
+        foreach (weapon : sped) {
             let zombiesWeapon = HH_Weapon(weapon);
             if (zombiesWeapon != null) {
                 if (on) {

@@ -20,6 +20,9 @@ class HH_Weapon : Weapon {
     meta class<Weapon> downed;  // given for the last stand instead, when this is the pistol
     meta int risenWeight;       // once unlocked from the roster, how often the box picks it while its
                                 // player is Risen (HH_RisenPower), instead of 1; 0 for no difference
+    meta class<Weapon> alternate;   // its alternate ammo type: another weapon, the same gun firing
+                                    // something else (the M1 Garand's rifle grenades), carried with it
+                                    // and gone with it; slot 3 swaps between them. Give it Counted false.
 
     property ActiveAmmo: activeAmmo;
     property ReloadFrameRate: reloadFrameRate;
@@ -33,6 +36,7 @@ class HH_Weapon : Weapon {
     property RoundAmmo: roundAmmo;
     property Downed: downed;
     property RisenWeight: risenWeight;
+    property Alternate: alternate;
 
     Default {
         HH_Weapon.Counted true;
@@ -251,9 +255,18 @@ class HH_WeaponPool play {
     static void Everything(out Array<class<Weapon> > weapons) {
         weapons.Clear();
         let firstGameLump = max(0, Wads.FindLump("S_START", 0));
+        // an alternate ammo type comes with its weapon, never on its own
+        Array<class<Weapon> > alternates;
+        foreach (type : AllActorClasses) {
+            let zombiesWeapon = (class<HH_Weapon>)(type);
+            if (zombiesWeapon != null && GetDefaultByType(zombiesWeapon).alternate != null) {
+                alternates.Push(GetDefaultByType(zombiesWeapon).alternate);
+            }
+        }
         foreach (type : AllActorClasses) {
             let weaponType = (class<Weapon>)(type);
-            if (weaponType == null || weaponType == 'Weapon' || Actor.GetReplacement(weaponType) != weaponType) {
+            if (weaponType == null || weaponType == 'Weapon' || Actor.GetReplacement(weaponType) != weaponType
+                    || alternates.Find(weaponType) != alternates.Size()) {
                 continue;
             }
             let weapon = GetDefaultByType(weaponType);
