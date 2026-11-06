@@ -90,8 +90,28 @@ class HH_Rounds : EventHandler {
             drops.OnRoundStarted();
         }
         S_StartSound(self.currentRound == 1? "hh/game_start": "hh/round_start", CHAN_AUTO, CHANF_UI, attenuation: ATTN_NONE);
+        if (self.currentRound > 1) {
+            HH_Rounds.GiveRoundAmmo();
+        }
         HH_Players.RespawnSpectators();
         HH_Events.Fire('round_started', self.currentRound);
+    }
+
+    // Every player in the game (spectators come back with their start items instead) gets the
+    // round's ammo of each weapon carried that has it (HH_Weapon.RoundAmmo)
+    static void GiveRoundAmmo() {
+        for (let i = 0; i < MAXPLAYERS; ++i) {
+            if (!HH_Util.InGame(i) || players[i].mo.FindInventory('HH_Spectate') != null) {
+                continue;
+            }
+            let pawn = players[i].mo;
+            for (let item = pawn.inv; item != null; item = item.inv) {
+                let weapon = HH_Weapon(item);
+                if (weapon != null && weapon.roundAmmo > 0 && weapon.ammoType1 != null) {
+                    pawn.GiveInventory(weapon.ammoType1, weapon.roundAmmo);
+                }
+            }
+        }
     }
 
     void OnZombieKilled() {

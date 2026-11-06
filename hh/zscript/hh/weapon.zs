@@ -15,6 +15,8 @@ class HH_Weapon : Weapon {
     meta bool counted;          // counts against hh_max_weapons (drinks and melee don't)
     meta class<Weapon> upgrade; // its upgraded version, which wall buys sell ammo for
     meta bool equipment;        // carried apart from the weapons (hh_max_equipment), on the equipment key
+    meta int roundAmmo;         // reserve ammo its carriers get at the start of every round after the
+                                // first, up to the most carried (grenades)
     meta class<Weapon> downed;  // given for the last stand instead, when this is the pistol
     meta int risenWeight;       // once unlocked from the roster, how often the box picks it while its
                                 // player is Risen (HH_RisenPower), instead of 1; 0 for no difference
@@ -28,6 +30,7 @@ class HH_Weapon : Weapon {
     property Counted: counted;
     property Upgrade: upgrade;
     property Equipment: equipment;
+    property RoundAmmo: roundAmmo;
     property Downed: downed;
     property RisenWeight: risenWeight;
 

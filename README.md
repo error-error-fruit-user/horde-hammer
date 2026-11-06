@@ -116,6 +116,7 @@ Horde Hammer has no guns. A game's weapons subclass `HH_Weapon`, which adds a ma
 | `HH_Weapon.BoxWeight` | How often the mystery box gives it (0 for never) |
 | `HH_Weapon.LastStand` | Going down pulls out the held weapon with the highest value (0 for never) |
 | `HH_Weapon.Upgrade` | Its upgraded version, which wall buys sell ammo for |
+| `HH_Weapon.RoundAmmo` | Reserve ammo its carriers get at the start of every round after the first, up to the most carried (World at War's two grenades a round) |
 
 Last stand and Max Ammo find weapons by these properties, so there is no list to edit. The box searches the player's own weapon slots (their class's `Player.WeaponSlot`, and any weapon's `Weapon.SlotNumber`), so every player class gets its own roster, a mod's included (Brutal Doom, Project Brutality): an `HH_Weapon` comes as often as its box weight, any other weapon but melee at 1, unless it is `CHEATNOTWEAPON` (a mod's variant of another, like Brutal Doom's purist and dual ones). A packaged weapon that should come from the box needs a slot. The box, wall buys and weapons lying on the floor never give a weapon the player already holds: the same class, one derived from it or one it derives from, or its upgrade.
 
