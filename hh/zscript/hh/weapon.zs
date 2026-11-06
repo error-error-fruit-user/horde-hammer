@@ -50,6 +50,23 @@ class HH_Weapon : Weapon {
         }
     }
 
+    // Equipment that isn't melee has no magazine: with nothing left to throw it can't be picked,
+    // whatever AMMO_OPTIONAL (there for the magazine) says
+    override bool CheckAmmo(int fireMode, bool autoSwitch, bool requireAmmo, int ammoCount) {
+        let thrown = self.equipment && !HH_InventoryManager.IsMelee(self.GetClass());
+        return super.CheckAmmo(fireMode, autoSwitch, requireAmmo || thrown, ammoCount);
+    }
+
+    // ...and the engine's own selection (`use`, its slot keys with hh_weapon_switching off) leaves
+    // it where it is, instead of lowering the weapon in hand to bring up nothing
+    override bool Use(bool pickup) {
+        let player = self.owner != null? self.owner.player: null;
+        if (!pickup && player != null && player.ReadyWeapon != self && !self.CheckAmmo(EitherFire, false)) {
+            return false;
+        }
+        return super.Use(pickup);
+    }
+
     void ActivateFastReload() {
         self.reloadFrameRate = max(1, self.Default.reloadFrameRate - 1);
     }

@@ -430,11 +430,13 @@ class HH_InventoryManager : Inventory {
         return zombiesWeapon != null && zombiesWeapon.activeAmmo > 0;
     }
 
-    // Equipment that can come up: thrown things need something left to throw; melee whose ammo is
-    // optional (a chainsaw out of fuel) still swings
+    // Equipment that can come up: thrown things need something left to throw (every HH_Weapon's
+    // ammo is optional, for its magazine, so that says nothing); melee whose ammo is optional (a
+    // chainsaw out of fuel) still swings
     bool Usable(Weapon weapon) {
-        return weapon != null && (weapon.ammoType1 == null || weapon.bAmmo_Optional
-            || (weapon.bMeleeWeapon && weapon.ammoUse1 <= 0) || self.owner.CountInv(weapon.ammoType1) > 0);
+        return weapon != null && (weapon.ammoType1 == null
+            || (weapon.bMeleeWeapon && (weapon.bAmmo_Optional || weapon.ammoUse1 <= 0))
+            || self.owner.CountInv(weapon.ammoType1) > 0);
     }
 
     // The equipment key: from the weapons to the equipment last held (or the first usable), and back
