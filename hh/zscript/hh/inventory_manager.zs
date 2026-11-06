@@ -11,6 +11,7 @@ class HH_InventoryManager : Inventory {
     Array<Weapon> weapons;              // the weapons that count against hh_max_weapons, in slot order
     Array<Weapon> equipment;            // equipment (hh_max_equipment), in the order it came
     Array<Weapon> alternates;           // the carried weapons' alternate ammo types (HH_Weapon.Alternate)
+    Array<Weapon> leftOnAlternate;      // carried weapons put away on their alternate: they come back on it
     class<Weapon> lastWeapon, lastEquipment;    // what the equipment key goes back to
     int risenRound;                     // the round this player last rose (HH_Risen)
     class<Weapon> given;                // a weapon just given, brought up on the next tic
@@ -178,6 +179,7 @@ class HH_InventoryManager : Inventory {
         } else if (ready != null && (self.Owns(ready) || self.IsAlternate(ready) || ready.GetClass() == self.melee)) {
             self.lastWeapon = ready.GetClass();
         }
+        self.RememberAlternate(ready);
         self.hud.Update();
     }
 
@@ -369,6 +371,38 @@ class HH_InventoryManager : Inventory {
         }
     }
 
+    // Which of a carried weapon's two ammo types the player last had in hand: a weapon in hand on
+    // its alternate is left on it, and on itself again once it is back in hand as itself
+    void RememberAlternate(Weapon ready) {
+        for (let i = self.leftOnAlternate.Size() - 1; i >= 0; --i) {
+            let left = self.leftOnAlternate[i];
+            if (left == null || !self.Owns(left) || left == ready) {
+                self.leftOnAlternate.Delete(i);
+            }
+        }
+        if (self.IsAlternate(ready)) {
+            let base = self.BaseOf(ready);
+            if (base != ready && self.Owns(base) && self.leftOnAlternate.Find(base) == self.leftOnAlternate.Size()) {
+                self.leftOnAlternate.Push(base);
+            }
+        }
+    }
+
+    // Brings up a carried weapon the way it was put away: on its alternate ammo type if it was
+    // left on it (and that has something to fire), else as itself
+    void BringUp(Weapon weapon) {
+        if (weapon == null) {
+            return;
+        }
+        let alternate = self.AlternateFor(weapon);
+        if (alternate != null && self.leftOnAlternate.Find(weapon) != self.leftOnAlternate.Size()
+                && self.HasAmmo(alternate)) {
+            self.owner.A_SelectWeapon(alternate.GetClass());
+        } else {
+            self.owner.A_SelectWeapon(weapon.GetClass());
+        }
+    }
+
     // Slot 3 with a weapon in hand that has an alternate ammo type: over to it, or back
     bool SwapAlternate() {
         let ready = self.owner.player != null? self.owner.player.ReadyWeapon: null;
@@ -442,6 +476,7 @@ class HH_InventoryManager : Inventory {
         self.weapons.Clear();
         self.equipment.Clear();
         self.alternates.Clear();
+        self.leftOnAlternate.Clear();
         self.perks.Clear();
         self.fastReload = false;
         self.doubleFire = false;
@@ -490,7 +525,7 @@ class HH_InventoryManager : Inventory {
 
     void SelectBest() {
         if (self.weapons.Size() != 0) {
-            self.owner.A_SelectWeapon(self.weapons[0].GetClass());
+            self.BringUp(self.weapons[0]);
         } else if (self.melee != null) {
             self.owner.A_SelectWeapon(self.melee);
         }
@@ -604,7 +639,7 @@ class HH_InventoryManager : Inventory {
         }
         let index = self.weapons.Find(self.BaseOf(self.owner.player.ReadyWeapon));
         let next = index == count? (step > 0? 0: count - 1): ((index + step) % count + count) % count;
-        self.owner.A_SelectWeapon(self.weapons[next].GetClass());
+        self.BringUp(self.weapons[next]);
     }
 
     // Slot 1 is the first carried weapon, slot 2 the second...; slot 0 (the 0 key) brings up the
@@ -624,7 +659,7 @@ class HH_InventoryManager : Inventory {
         if (slot == 0) {
             self.SwapSet();
         } else if (slot <= self.weapons.Size()) {
-            self.owner.A_SelectWeapon(self.weapons[slot - 1].GetClass());
+            self.BringUp(self.weapons[slot - 1]);
         }
     }
 
