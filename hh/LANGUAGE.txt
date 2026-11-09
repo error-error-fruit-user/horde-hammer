@@ -29,6 +29,8 @@ HH_HUD_SURVIVED = "You survived %d rounds";
 HH_HUD_SURVIVED_ONE = "You survived 1 round";
 HH_HUD_SPECTATING = "Spectating";
 HH_HUD_SPECTATING_WHO = "Spectating %s";
+HH_HUD_PREVIEW_MESSAGE = "Messages show here";
+HH_HUD_PREVIEW_WEAPON = "Weapon";
 
 // Tags
 HH_TAG_QUICK_REVIVE = "Quick Revive";

@@ -239,8 +239,16 @@ class HH_HudHandler : EventHandler {
     }
 
     override void RenderOverlay(RenderEvent e) {
+        if (automapactive) {
+            return;
+        }
+        // In the HUD layout menu every part shows, with stand-in contents, so it can be placed
+        if (HH_HudHandler.Previewing()) {
+            self.DrawPreview();
+            return;
+        }
         let manager = HH_Util.ManagerOf(consolePlayer);
-        if (manager == null || automapactive) {
+        if (manager == null) {
             return;
         }
         let rounds = HH_Rounds.Get();
@@ -270,20 +278,90 @@ class HH_HudHandler : EventHandler {
         self.DrawRoster(manager);
     }
 
+    // Whether the HUD layout menu is open
+    static ui bool Previewing() {
+        let menu = OptionMenu(Menu.GetCurrentMenu());
+        return menu != null && menu.mDesc != null && menu.mDesc.mMenuName == 'HH_HudOptions';
+    }
+
+    // Every part the player shows, with stand-in contents: the game's own perk and power-up icons
+    ui void DrawPreview() {
+        if (HH_HudHandler.Shows("round")) {
+            HH_HudHandler.RoundText(5, HH_HudHandler.ROUND_COLOR, 1.0);
+        }
+        if (HH_HudHandler.Shows("messages")) {
+            HH_HudHandler.MessageLine(0, StringTable.Localize("$HH_HUD_PREVIEW_MESSAGE"), 1.0);
+            HH_HudHandler.MessageLine(1, StringTable.Localize("$HH_HUD_PREVIEW_MESSAGE"), 0.5);
+        }
+        if (HH_HudHandler.Shows("points")) {
+            HH_HudHandler.PointsText(1500);
+            HH_HudHandler.PointsDelta(50, (0, 0), 1.0);
+            HH_HudHandler.PointsDelta(10, (6, -8), 0.6);
+        }
+        if (HH_HudHandler.Shows("ammo") > 0) {
+            HH_HudHandler.AmmoText("8 / 32");
+        }
+        Array<TextureID> perks;
+        Array<TextureID> powerups;
+        foreach (type : AllActorClasses) {
+            if (Actor.GetReplacement(type) != type) {
+                continue;
+            }
+            let perk = (class<HH_Perk>)(type);
+            let power = (class<HH_Powerup>)(type);
+            if (perk != null) {
+                HH_HudHandler.AddIcon(perks, GetDefaultByType(perk).Icon);
+            } else if (power != null) {
+                HH_HudHandler.AddIcon(powerups, GetDefaultByType(power).Icon);
+            }
+        }
+        if (HH_HudHandler.Shows("perks")) {
+            HH_HudHandler.PerkIcons(perks);
+        }
+        if (HH_HudHandler.Shows("powerups")) {
+            Array<bool> drawn;
+            foreach (icon : powerups) {
+                drawn.Push(true);
+            }
+            HH_HudHandler.PowerupIcons(powerups, drawn);
+        }
+        if (HH_HudHandler.Shows("hint")) {
+            HH_HudHandler.HintText(HH_Util.Localized("$HH_HINT_COST", "1000"));
+            HH_HudHandler.RosterText(StringTable.Localize("$HH_HUD_PREVIEW_WEAPON"), HH_HudHandler.HINT_COLOR);
+        }
+        if (HH_HudHandler.Shows("revive")) {
+            HH_HudHandler.ReviveBar(0.6);
+        }
+    }
+
+    // An icon for the preview, once each
+    static ui void AddIcon(out Array<TextureID> icons, TextureID icon) {
+        if (icon.IsValid() && icons.Find(icon) == icons.Size()) {
+            icons.Push(icon);
+        }
+    }
+
     ui void DrawPoints(HH_InventoryManager manager) {
         if (!HH_HudHandler.Shows("points")) {
             return;
         }
-        let scale = HH_HudHandler.ScaleOf("points");
-        let place = HH_HudHandler.PlaceOf("points");
-        HH_HudHandler.Text(HH_HudHandler.NumberFont(), HH_HudHandler.POINTS_COLOR, place, String.Format("%d", HH_Points.CountOf(manager.owner)), -1, scale);
+        HH_HudHandler.PointsText(HH_Points.CountOf(manager.owner));
         foreach (delta : manager.hud.deltas) {
-            let tint = delta.value < 0? HH_HudHandler.LOSS_COLOR: delta.value >= 100? HH_HudHandler.BIG_GAIN_COLOR: HH_HudHandler.GAIN_COLOR;
-            let text = delta.value < 0? String.Format("-%d", -delta.value): String.Format("+%d", delta.value);
-            let at = place + (45 + delta.offset.x, 3 + delta.offset.y) * scale;
-            let alpha = double(delta.ticsLeft) / HH_HudState.DELTA_TICS;
-            HH_HudHandler.Text(smallFont, tint, at, text, -1, scale * 0.75, alpha);
+            HH_HudHandler.PointsDelta(delta.value, delta.offset, double(delta.ticsLeft) / HH_HudState.DELTA_TICS);
         }
+    }
+
+    static ui void PointsText(int points) {
+        HH_HudHandler.Text(HH_HudHandler.NumberFont(), HH_HudHandler.POINTS_COLOR, HH_HudHandler.PlaceOf("points"), String.Format("%d", points), -1, HH_HudHandler.ScaleOf("points"));
+    }
+
+    // A change of points floating off to the right of them
+    static ui void PointsDelta(int value, Vector2 offset, double alpha) {
+        let scale = HH_HudHandler.ScaleOf("points");
+        let tint = value < 0? HH_HudHandler.LOSS_COLOR: value >= 100? HH_HudHandler.BIG_GAIN_COLOR: HH_HudHandler.GAIN_COLOR;
+        let text = value < 0? String.Format("-%d", -value): String.Format("+%d", value);
+        let at = HH_HudHandler.PlaceOf("points") + (45 + offset.x, 3 + offset.y) * scale;
+        HH_HudHandler.Text(smallFont, tint, at, text, -1, scale * 0.75, alpha);
     }
 
     ui void DrawRound(HH_Rounds rounds) {
@@ -297,8 +375,11 @@ class HH_HudHandler : EventHandler {
             alpha = abs((rounds.phaseTics % period) - period / 2) / double(period / 2);
             tint = Font.CR_UNTRANSLATED;
         }
-        let place = HH_HudHandler.PlaceOf("round");
-        HH_HudHandler.Text(HH_HudHandler.NumberFont(), tint, place, String.Format("%d", rounds.currentRound), 1, HH_HudHandler.ScaleOf("round"), alpha);
+        HH_HudHandler.RoundText(rounds.currentRound, tint, alpha);
+    }
+
+    static ui void RoundText(int round, int tint, double alpha) {
+        HH_HudHandler.Text(HH_HudHandler.NumberFont(), tint, HH_HudHandler.PlaceOf("round"), String.Format("%d", round), 1, HH_HudHandler.ScaleOf("round"), alpha);
     }
 
     ui void DrawAmmo(HH_InventoryManager manager) {
@@ -314,28 +395,35 @@ class HH_HudHandler : EventHandler {
             return;
         }
         let reserve = weapon.ammoType1 != null? manager.owner.CountInv(weapon.ammoType1): -1;
-        String text;
         if (zombiesWeapon != null && zombiesWeapon.Default.activeAmmo > 0) {
-            text = String.Format("%d / %d", zombiesWeapon.activeAmmo, max(reserve, 0));
+            HH_HudHandler.AmmoText(String.Format("%d / %d", zombiesWeapon.activeAmmo, max(reserve, 0)));
         } else if (reserve >= 0) {
-            text = String.Format("%d", reserve);
-        } else {
-            return;
+            HH_HudHandler.AmmoText(String.Format("%d", reserve));
         }
-        let place = HH_HudHandler.PlaceOf("ammo");
-        HH_HudHandler.Text(HH_HudHandler.NumberFont(), HH_HudHandler.AMMO_COLOR, place, text, 1, HH_HudHandler.ScaleOf("ammo"));
+    }
+
+    static ui void AmmoText(String text) {
+        HH_HudHandler.Text(HH_HudHandler.NumberFont(), HH_HudHandler.AMMO_COLOR, HH_HudHandler.PlaceOf("ammo"), text, 1, HH_HudHandler.ScaleOf("ammo"));
     }
 
     ui void DrawPerks(HH_InventoryManager manager) {
         if (!HH_HudHandler.Shows("perks")) {
             return;
         }
+        Array<TextureID> icons;
+        for (let i = 0; i < manager.perks.Size(); ++i) {
+            icons.Push(GetDefaultByType(manager.perks[i]).Icon);
+        }
+        HH_HudHandler.PerkIcons(icons);
+    }
+
+    // The perks in a row, left to right
+    static ui void PerkIcons(Array<TextureID> icons) {
         let scale = HH_HudHandler.ScaleOf("perks");
         let place = HH_HudHandler.PlaceOf("perks");
         let size = HH_HudHandler.ICON_SIZE * scale;
         let x = place.x;
-        for (let i = 0; i < manager.perks.Size(); ++i) {
-            let icon = GetDefaultByType(manager.perks[i]).Icon;
+        foreach (icon : icons) {
             let width = HH_HudHandler.WidthFor(icon, size);
             HH_HudHandler.Picture(icon, x, place.y, width, size);
             x += width + HH_HudHandler.ICON_GAP * scale;
@@ -346,14 +434,23 @@ class HH_HudHandler : EventHandler {
         if (!HH_HudHandler.Shows("powerups")) {
             return;
         }
-        Array<HH_Powerup> powers;
+        Array<TextureID> icons;
+        Array<bool> drawn;
         for (let item = manager.owner.Inv; item != null; item = item.Inv) {
             let power = HH_Powerup(item);
             if (power != null && power.EffectTics > 0) {
-                powers.Push(power);
+                // Blinking for the last three seconds, faster for the last one
+                let tics = power.EffectTics;
+                icons.Push(power.Icon);
+                drawn.Push(tics >= TICRATE * 3 || (tics / (tics < TICRATE? 4: 8)) % 2 != 0);
             }
         }
-        if (powers.Size() == 0) {
+        HH_HudHandler.PowerupIcons(icons, drawn);
+    }
+
+    // The power-ups in a row, centred; the ones not drawn (blinking) keep their place
+    static ui void PowerupIcons(Array<TextureID> icons, Array<bool> drawn) {
+        if (icons.Size() == 0) {
             return;
         }
         let scale = HH_HudHandler.ScaleOf("powerups");
@@ -361,16 +458,14 @@ class HH_HudHandler : EventHandler {
         let size = HH_HudHandler.ICON_SIZE * 1.5 * scale;
         let gap = HH_HudHandler.ICON_GAP * scale;
         let total = -gap;
-        foreach (power : powers) {
-            total += HH_HudHandler.WidthFor(power.Icon, size) + gap;
+        foreach (icon : icons) {
+            total += HH_HudHandler.WidthFor(icon, size) + gap;
         }
         let x = place.x - total / 2;
-        foreach (power : powers) {
-            let width = HH_HudHandler.WidthFor(power.Icon, size);
-            // Blinking for the last three seconds, faster for the last one
-            let tics = power.EffectTics;
-            if (tics >= TICRATE * 3 || (tics / (tics < TICRATE? 4: 8)) % 2 != 0) {
-                HH_HudHandler.Picture(power.Icon, x, place.y, width, size);
+        for (let i = 0; i < icons.Size(); ++i) {
+            let width = HH_HudHandler.WidthFor(icons[i], size);
+            if (drawn[i]) {
+                HH_HudHandler.Picture(icons[i], x, place.y, width, size);
             }
             x += width + gap;
         }
@@ -380,9 +475,11 @@ class HH_HudHandler : EventHandler {
         if (!HH_HudHandler.Shows("hint") || manager.hud.hintTics <= 0 || manager.hud.hintId == "") {
             return;
         }
-        let place = HH_HudHandler.PlaceOf("hint");
-        let text = HH_Util.Localized(manager.hud.hintId, manager.hud.hintArgument);
-        HH_HudHandler.Text(conFont, HH_HudHandler.HINT_COLOR, place, text, 0, HH_HudHandler.ScaleOf("hint"));
+        HH_HudHandler.HintText(HH_Util.Localized(manager.hud.hintId, manager.hud.hintArgument));
+    }
+
+    static ui void HintText(String text) {
+        HH_HudHandler.Text(conFont, HH_HudHandler.HINT_COLOR, HH_HudHandler.PlaceOf("hint"), text, 0, HH_HudHandler.ScaleOf("hint"));
     }
 
     // The roster's weapon, over the hint: blinking red when the box can't give it
@@ -393,16 +490,24 @@ class HH_HudHandler : EventHandler {
         if (!manager.hud.rosterGives && (level.maptime / 8) % 2 == 1) {
             return;
         }
+        HH_HudHandler.RosterText(manager.hud.rosterName, manager.hud.rosterGives? HH_HudHandler.HINT_COLOR: Font.CR_RED);
+    }
+
+    static ui void RosterText(String name, int tint) {
         let scale = HH_HudHandler.ScaleOf("hint");
         let place = HH_HudHandler.PlaceOf("hint") - (0, 14 * scale);
-        let tint = manager.hud.rosterGives? HH_HudHandler.HINT_COLOR: Font.CR_RED;
-        HH_HudHandler.Text(bigFont, tint, place, manager.hud.rosterName, 0, scale * 0.75);
+        HH_HudHandler.Text(bigFont, tint, place, name, 0, scale * 0.75);
     }
 
     ui void DrawRevive(HH_InventoryManager manager) {
         if (!HH_HudHandler.Shows("revive") || manager.hud.revive <= 0) {
             return;
         }
+        HH_HudHandler.ReviveBar(manager.hud.revive);
+    }
+
+    // The revive bar, `done` (0 to 1) of it filled
+    static ui void ReviveBar(double done) {
         let scale = HH_HudHandler.ScaleOf("revive");
         let place = HH_HudHandler.PlaceOf("revive");
         let back = TexMan.CheckForTexture("HHRVBACK");
@@ -414,7 +519,7 @@ class HH_HudHandler : EventHandler {
         // The front shows as much of itself as the revive has done
         if (fore.IsValid()) {
             Screen.DrawTexture(fore, false, left, place.y, DTA_DestWidthF, width, DTA_DestHeightF, height,
-                DTA_LeftOffset, 0, DTA_TopOffset, 0, DTA_ClipRight, int(left + width * manager.hud.revive),
+                DTA_LeftOffset, 0, DTA_TopOffset, 0, DTA_ClipRight, int(left + width * done),
                 DTA_Alpha, HH_HudHandler.Setting("hh_hud_alpha"));
         }
     }
@@ -423,14 +528,17 @@ class HH_HudHandler : EventHandler {
         if (!HH_HudHandler.Shows("messages") || self.messageLog == null) {
             return;
         }
-        let scale = HH_HudHandler.ScaleOf("messages");
-        let place = HH_HudHandler.PlaceOf("messages");
-        let lineHeight = smallFont.GetHeight() * scale * 1.2;
         for (let i = 0; i < self.messageLog.messages.Size(); ++i) {
             let message = self.messageLog.messages[i];
-            let alpha = min(1.0, message.ticsLeft / double(HH_MessageLog.FADE_TICS));
-            HH_HudHandler.Text(smallFont, HH_HudHandler.MESSAGE_COLOR, place + (0, i * lineHeight), message.text, 0, scale, alpha);
+            HH_HudHandler.MessageLine(i, message.text, min(1.0, message.ticsLeft / double(HH_MessageLog.FADE_TICS)));
         }
+    }
+
+    // The message log's `index`th line
+    static ui void MessageLine(int index, String text, double alpha) {
+        let scale = HH_HudHandler.ScaleOf("messages");
+        let lineHeight = smallFont.GetHeight() * scale * 1.2;
+        HH_HudHandler.Text(smallFont, HH_HudHandler.MESSAGE_COLOR, HH_HudHandler.PlaceOf("messages") + (0, index * lineHeight), text, 0, scale, alpha);
     }
 
     ui void DrawSpectating() {
